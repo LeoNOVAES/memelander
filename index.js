@@ -77,7 +77,7 @@ client.on('ready', async () => {
 
     try {
       await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
-      console.log('Successfully registered application commands globally.');
+      console.log(`Successfully registered application commands globally -> ${guildID}`);
     } catch (error) {
         console.error('Error registering commands:', error);
     }
