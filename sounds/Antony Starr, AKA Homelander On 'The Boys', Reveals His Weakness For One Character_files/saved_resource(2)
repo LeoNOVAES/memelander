@@ -1,0 +1,66 @@
+/*
+ * this has been added to address a
+ * 911 regarding right rail ad unit
+ * overlapping featured items in
+ * latest news section on homepage
+ * 
+ * this is temp band-aid and should
+ * be removed once a proper fix
+ * has been added
+ */
+.home .a-archive-grid__editors-pick .river-story .pmc-a-cols3 {
+	max-width: 870px;
+}
+
+.has-side-skins .home .a-archive-grid__editors-pick .river-story .pmc-a-cols3 {
+	max-width: 650px;
+}
+
+/* temp fix for has-side-skins larva override */
+.has-side-skins {
+  max-width: 72.5rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* temp fix for must read stories css issue */
+[data-toaster-wrap]{z-index:1998;height:11.875rem;position:fixed;left:0;top:100%;bottom:0}
+
+/* hotfix for related stories module on article page to hide primary category badge */
+.injected-related-story > h3 {padding: 12px 0 6px 0;}
+.injected-related-story > div > article > div > a.c-span__link {display: none;}
+.injected-related-story > div > article > div > h3 > a {margin-top: 4px;}
+
+/* hotfix for story arc on homepage raised in PEP-7647 */
+@media (min-width: 62.5rem) {
+	body.home section.story-arc-news-river .pmc-a-grid {
+		display: flex;
+	}
+}
+
+.cwv2-preview-site-width-changes,
+.cwv2-preview-site-width-changes .lrv-a-wrapper {
+	--site-max-width: 1160px;
+}
+
+.single-pmc-hub .lrv-u-background-color-grey-lightest {
+    background-color: #ffebcd00;
+}
+
+.single-pmc-hub .lrv-a-font-primary-xs {
+    font-size: 18px;
+    line-height: 22px;
+}
+
+/* hotfix for heading blocks in regular posts raised in PEP-8857 */
+body.postid-1235696511 article > div.a-content > h2, body.postid-1235821487 article > div.a-content > h2, body.postid-1235807765 article > div.a-content > h2 {
+	font-size:28px;
+}
+body.postid-1235696511 article > div.a-content > h3, body.postid-1235821487 article > div.a-content > h3, body.postid-1235807765 article > div.a-content > h3 {
+	font-size:16px;
+}
+
+/* Temp CSS for hyperlinks in Hubs */
+body.single-pmc-hub h5.heading.larva > a:hover {
+	text-decoration-line: underline;
+}

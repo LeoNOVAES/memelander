@@ -1,0 +1,1 @@
+var pmc_fastly_geo_data = {"city":"mangualde","region":"18","country":"PT","continent":"EU","asn":"12353"}

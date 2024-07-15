@@ -9,7 +9,7 @@ module.exports = {
       const { voice } = interaction.member;
 
       if (!voice.channel) {
-        interaction.reply('You must be in a voice channel to use this command!');
+        interaction.reply('Voce precisa estar em um canal de VOZ para executar esse comando!');
         return;
       }
 
