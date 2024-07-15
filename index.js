@@ -7,15 +7,15 @@ const { joinVoiceChannel, createAudioResource, AudioPlayerStatus } = require('@d
 require('dotenv/config');
 
 const CHANNEL_NAME = 'memelander';
-let CHANNEL_IDS = [''];
+let CHANNEL_IDS = [];
 
 async function playMeme(url, interaction) {
-  if (!interaction || !interaction?.member || !interaction?.voice?.channel) return;
+  if (!interaction || !interaction?.member || !interaction?.member?.voice?.channel) return;
 
   const connection = joinVoiceChannel({
     channelId: interaction?.member?.voice?.channel?.id,
-    guildId: interaction.guild.id,
-    adapterCreator: interaction.guild.voiceAdapterCreator,
+    guildId: interaction?.guild?.id,
+    adapterCreator: interaction?.guild?.voiceAdapterCreator,
   });
 
   const player = createAudioPlayer();
@@ -74,7 +74,7 @@ client.on('ready', async () => {
     if (channel) {
       CHANNEL_IDS.push(channel.id);
     }
-    
+
     try {
       await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
       console.log('Successfully registered application commands globally.');
@@ -96,8 +96,7 @@ client.on('interactionCreate', async interaction => {
   if (!CHANNEL_IDS.includes(interaction.channelId)) {
     await interaction.reply({ content: 'Apenas envie meme no canal #memelander!', ephemeral: true });
     return;
-  }  
-  
+  }
   
   if (interaction.isCommand()) {
     const command = client.commands.get(interaction.commandName);
