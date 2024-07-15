@@ -45,6 +45,6 @@ module.exports = {
           .setStyle(ButtonStyle.Success),
     );
 
-      await interaction.reply({ content: 'Here is a button:', components: [row, row2] });
+      await interaction.reply({ content: 'Todos os audios disponiveis:', components: [row, row2] });
     }
 }
