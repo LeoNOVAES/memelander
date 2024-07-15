@@ -10,8 +10,10 @@ const CHANNEL_NAME = 'memelander';
 let CHANNEL_IDS = [''];
 
 async function playMeme(url, interaction) {
+  if (!interaction || !interaction?.member || !interaction?.voice?.channel) return;
+
   const connection = joinVoiceChannel({
-    channelId: interaction.member.voice.channel.id,
+    channelId: interaction?.member?.voice?.channel?.id,
     guildId: interaction.guild.id,
     adapterCreator: interaction.guild.voiceAdapterCreator,
   });
