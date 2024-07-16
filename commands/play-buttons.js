@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { joinVoiceChannel, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const { createAudioPlayer } = require('discord-player');
+const sounds = require('../sounds/sounds.json');
 
 async function playMeme(url, interaction) {
   if (!interaction || !interaction?.member || !interaction?.member?.voice?.channel) return;
@@ -62,7 +63,7 @@ async function execute({ interaction }) {
   const row2 = new ActionRowBuilder()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId('vegeta-o-miseravel-e-um-miseravel-online-audio-converter')
+        .setCustomId('vegeta-o-miseravel-e-um-miseravel')
         .setLabel('vegeta-o-miseravel-e-um-miseravel-online-audio-converter')
         .setStyle(ButtonStyle.Success),
     );
@@ -72,38 +73,17 @@ async function execute({ interaction }) {
 
 async function interaction({interaction}) {
   if (interaction.isButton) {
-    switch (interaction.customId) {
-      case 'grito_gay':
-          await interaction.reply('grito_gay clicked!');
-          await playMeme('https://www.myinstants.com/media/sounds/grito-gay.mp3', interaction);
-          break;
-      case 'fluminense':
-          await interaction.reply('Fluminense clicked!');
-          await playMeme('https://www.myinstants.com/media/sounds/fluminense.mp3', interaction);
-          break;
-      case 'fala-baixo-nengue':
-          await interaction.reply('fala-baixo-nengue clicked!');
-          await playMeme('https://www.myinstants.com/media/sounds/fala-baixo-nengue.mp3', interaction);
-          break;
-      case 'meu-cu-no-seu-pal':
-        await interaction.reply('lucas-meu-cu-no-seu-pal clicked!');
-        await playMeme('https://www.myinstants.com/media/sounds/c_1.mp3', interaction);
-        break;
-      case 'gado-miseravel-nando-moura':
-        await interaction.reply('gado-miseravel-nando-moura clicked!');
-        await playMeme('https://www.myinstants.com/media/sounds/gado-miseravel-nando-moura.mp3', interaction);
-        break;
-        case 'vegeta-o-miseravel-e-um-miseravel-online-audio-converter':
-          await interaction.reply('vegeta-o-miseravel-e-um-miseravel-online-audio-converter clicked!');
-          await playMeme('https://www.myinstants.com/media/sounds/vegeta-o-miseravel-e-um-miseravel-online-audio-converter.mp3', interaction);
-          break;
-      default:
-          await interaction.reply('Unknown button clicked!');
-          break;
+    const sound = sounds.find(sound => sound.id === interaction.customId);
+
+    if (!sound) {
+      await interaction.reply('meme nao encontrado!');
+      return;
     }
+
+    await interaction.reply(`${interaction.user.username} clicou em ${sound.name}!`);
+    await playMeme(sound.url, interaction);
   }
 }
-
 
 module.exports = {
   body,

@@ -1,6 +1,50 @@
-{
-  "roblox-death": "https://www.myinstants.com/media/sounds/roblox-death-sound_1.mp3",
-  "fluminense": "https://www.myinstants.com/media/sounds/fluminense.mp3",
-  "trombone": "https://www.myinstants.com/media/sounds/trombone.mp3",
-  "grito_gay": "https://www.myinstants.com/media/sounds/grito-gay.mp3"
-}
+[
+  {
+     "id":"roblox-death",
+     "name":"roblox-death",
+     "emoji":"🔥",
+     "url":"https://www.myinstants.com/media/sounds/roblox-death-sound_1.mp3"
+  },
+  {
+     "id":"fluminense",
+     "name":"fluminense",
+     "emoji":"🔥",
+     "url":"https://www.myinstants.com/media/sounds/fluminense.mp3"
+  },
+  {
+     "id":"trombone",
+     "name":"trombone",
+     "emoji":"🔥",
+     "url":"https://www.myinstants.com/media/sounds/trombone.mp3"
+  },
+  {
+     "id":"grito_gay",
+     "name":"grito_gay",
+     "emoji":"🔥",
+     "url":"https://www.myinstants.com/media/sounds/grito-gay.mp3"
+  },
+  {
+     "id":"fala-baixo-nengue",
+     "name":"fala-baixo-nengue",
+     "emoji":"🔥",
+     "url":"https://www.myinstants.com/media/sounds/fala-baixo-nengue.mp3"
+  },
+  {
+     "id":"meu-cu-no-seu-pal",
+     "name":"meu-cu-no-seu-pal",
+     "emoji":"🔥",
+     "url":"https://www.myinstants.com/media/sounds/c_1.mp3"
+  },
+  {
+     "id":"gado-miseravel-nando-moura",
+     "name":"gado-miseravel-nando-moura",
+     "emoji":"🔥",
+     "url":"https://www.myinstants.com/media/sounds/gado-miseravel-nando-moura.mp3"
+  },
+  {
+     "id":"vegeta-o-miseravel-e-um-miseravel",
+     "name":"vegeta o miseravel e um miseravel",
+     "emoji":"🔥",
+     "url":"https://www.myinstants.com/media/sounds/vegeta-o-miseravel-e-um-miseravel-online-audio-converter.mp3"
+  }
+]

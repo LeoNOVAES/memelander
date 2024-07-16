@@ -75,7 +75,7 @@ async function registerCommands(client) {
 
     try {
       await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: COMMANDS });
-      console.log(`Successfully registered application commands globally -> ${guildID}`);
+      console.log(`Successfully registered application commands globally mode: (${process.env.NODE_ENV}) -> ${guildID}`);
     } catch (error) {
       console.error('Error registering commands:', error);
     }
@@ -101,7 +101,7 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
-  for (const [key, value] of client.commands.entries()) {
+  for (const [key] of client.commands.entries()) {
     const command = client.commands.get(key);
     await command.interaction({ interaction });
   };
