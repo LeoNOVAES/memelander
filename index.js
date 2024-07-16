@@ -58,13 +58,14 @@ async function registerCommands(client) {
       if (DEV_GUILD_ID === guild.id) return;
       return guild.id;
     });
-
   } else {
     guildIDS = [DEV_GUILD_ID];
   }
 
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
   for (guildID of guildIDS) {
+    if (!guildID) continue;
+
     const guild = client.guilds.cache.get(guildID);
     const channel = guild.channels.cache.find(ch => ch.name === CHANNEL_NAME);
 
