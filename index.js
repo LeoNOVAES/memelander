@@ -8,6 +8,7 @@ require('dotenv/config');
 const CHANNEL_NAME = 'memelander';
 const CHANNEL_IDS = [];
 const COMMANDS = [];
+const DEV_GUILD_ID = process.env.DEV_GUILD_ID;
 
 function createClient() {
   const client = new Client({
@@ -53,9 +54,13 @@ async function registerCommands(client) {
   let guildIDS = [];
 
   if (process.env.NODE_ENV !== 'development') {
-    guildIDS = client.guilds.cache.map(guild => guild.id); 
+    guildIDS = client.guilds.cache.map(guild => {
+      if (DEV_GUILD_ID === guild.id) return;
+      return guild.id;
+    });
+
   } else {
-    guildIDS = ['758496260763418666'];
+    guildIDS = [DEV_GUILD_ID];
   }
 
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
