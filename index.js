@@ -101,6 +101,20 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
+  if (interaction.isCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
+  
+    try {
+      await command.execute({ interaction });
+    } catch (error) {
+      console.error(error);
+      await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+    }
+
+    return;
+  }
+
   for (const [key] of client.commands.entries()) {
     const command = client.commands.get(key);
     await command.interaction({ interaction });

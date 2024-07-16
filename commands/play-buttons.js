@@ -29,12 +29,25 @@ function body() {
 }
 
 async function execute({ interaction }) {
+  // console.log('play-buttons execute', interaction);
   const { voice } = interaction.member;
+  const rows = [];
+  let rowCounter = 0;
 
   if (!voice.channel) {
     interaction.reply('Voce precisa estar em um canal de VOZ para executar esse comando!');
     return;
   }
+
+  // for (let i = 0; i < sounds.length; i++) {
+  //   const button = new ButtonBuilder()
+  //     .setCustomId(sounds[i].id)
+  //     .setLabel(sounds[i].name)
+  //     .setStyle(ButtonStyle.Primary);
+
+  //   const row = new ActionRowBuilder().addComponents(button);
+  //   rows.push(row);
+  // }
 
   const row = new ActionRowBuilder()
     .addComponents(
