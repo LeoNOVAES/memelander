@@ -50,8 +50,14 @@ function createClient() {
 }
 
 async function registerCommands(client) {
-  const guildIDS = client.guilds.cache.map(guild => guild.id);
-  // const guildIDS = ['758496260763418666'];
+  let guildIDS = [];
+
+  if (process.env.NODE_ENV !== 'development') {
+    guildIDS = client.guilds.cache.map(guild => guild.id); 
+  } else {
+    guildIDS = ['758496260763418666'];
+  }
+
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
   for (guildID of guildIDS) {
     const guild = client.guilds.cache.get(guildID);
