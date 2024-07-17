@@ -27,11 +27,10 @@ function body() {
     .setName('play')
     .setDescription('play a meme with buttons');
 }
-
 async function execute({ interaction }) {
-  // console.log('play-buttons execute', interaction);
   const { voice } = interaction.member;
   const rows = [];
+  const buttons = [];
   let rowCounter = 0;
 
   if (!voice.channel) {
@@ -40,13 +39,20 @@ async function execute({ interaction }) {
   }
 
   // for (let i = 0; i < sounds.length; i++) {
+  //   if (i > 5) {
+  //     return;
+  //   }
+
   //   const button = new ButtonBuilder()
   //     .setCustomId(sounds[i].id)
   //     .setLabel(sounds[i].name)
   //     .setStyle(ButtonStyle.Primary);
 
-  //   const row = new ActionRowBuilder().addComponents(button);
-  //   rows.push(row);
+  //   buttons.push(button);
+  //   rows.push(new ActionRowBuilder().addComponents(button));
+
+  //   // const row = new ActionRowBuilder().addComponents(button);
+  //   // rows.push(row);
   // }
 
   const row = new ActionRowBuilder()
@@ -79,10 +85,51 @@ async function execute({ interaction }) {
         .setCustomId('vegeta-o-miseravel-e-um-miseravel')
         .setLabel('vegeta-o-miseravel-e-um-miseravel-online-audio-converter')
         .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(sounds[0].id)
+        .setLabel(sounds[0].name)
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId('hum-e-mesmo')
+        .setLabel('hum e mesmo')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId('larga-me-a-pica')
+        .setLabel('🔥 larga-me-a-pica')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId('vou-nada')
+        .setLabel('vou nada')
+        .setStyle(ButtonStyle.Success)
     );
 
-  await interaction.reply({ content: 'Todos os audios disponiveis:', components: [row, row2] });
+    const row3 = new ActionRowBuilder()
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId('virus')
+        .setLabel('Indian virus')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId('water-indian')
+        .setLabel('water-indian')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId('fail-harry-potter')
+        .setLabel('fail-harry-potter')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId('vai-tomar-no-cu')
+        .setLabel('vai-tomar-no-cu')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId('leviosa')
+        .setLabel('leviosaaaaaaa')
+        .setStyle(ButtonStyle.Success)
+    );
+
+  await interaction.reply({ content: 'Todos os audios disponiveis:', components: [row, row2, row3] });
 }
+
 
 async function interaction({interaction}) {
   if (interaction.isButton) {
