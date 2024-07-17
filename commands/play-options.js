@@ -3,7 +3,7 @@ const { joinVoiceChannel, createAudioResource, AudioPlayerStatus } = require('@d
 const { createAudioPlayer } = require('discord-player');
 const sounds = require('../sounds/sounds.json');
 
-const rows = [];
+let rows = [];
 
 async function playMeme(url, interaction) {
   if (!interaction || !interaction?.member || !interaction?.member?.voice?.channel) return;
@@ -31,6 +31,8 @@ function body() {
 }
 
 function buildRows(index = 0) {
+  rows = [];
+
   const colors = [
     { color: ButtonStyle.Primary },
     { color: ButtonStyle.Secondary },
