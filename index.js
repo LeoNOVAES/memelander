@@ -96,29 +96,33 @@ client.on('messageCreate', (message) => {
 });
 
 client.on('interactionCreate', async interaction => {
-  if (!CHANNEL_IDS.includes(interaction.channelId)) {
-    await interaction.reply({ content: 'Apenas envie meme no canal #memelander!', ephemeral: true });
-    return;
-  }
-
-  if (interaction.isCommand()) {
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
-  
-    try {
-      await command.execute({ interaction });
-    } catch (error) {
-      console.error(error);
-      await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+  try {
+    if (!CHANNEL_IDS.includes(interaction.channelId)) {
+      await interaction.reply({ content: 'Apenas envie meme no canal #memelander!', ephemeral: true });
+      return;
     }
-
-    return;
+  
+    if (interaction.isCommand()) {
+      const command = client.commands.get(interaction.commandName);
+      if (!command) return;
+    
+      try {
+        await command.execute({ interaction });
+      } catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+      }
+  
+      return;
+    }
+  
+    for (const [key] of client.commands.entries()) {
+      const command = client.commands.get(key);
+      await command.interaction({ interaction });
+    };
+  } catch (error) {
+    console.error('Error on interactionCreate:', error);
   }
-
-  for (const [key] of client.commands.entries()) {
-    const command = client.commands.get(key);
-    await command.interaction({ interaction });
-  };
 });
 
 client.login(process.env.TOKEN);
