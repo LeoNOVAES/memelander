@@ -118,10 +118,13 @@ client.on('interactionCreate', async interaction => {
   
     for (const [key] of client.commands.entries()) {
       const command = client.commands.get(key);
-      await command.interaction({ interaction });
+
+      if (interaction) {
+        await command.interaction({ interaction });
+      }
     };
   } catch (error) {
-    console.error('Error on interactionCreate:', error);
+    console.log('Error on interactionCreate:', error);
   }
 });
 
