@@ -1,27 +1,35 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { joinVoiceChannel, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioResource, AudioPlayerStatus, getVoiceConnection } = require('@discordjs/voice');
 const { createAudioPlayer } = require('discord-player');
 const sounds = require('../sounds/sounds.json');
 
 let rows = [];
+let disconnectTimeout;
+const TIMEOUT_DISCONNECT = 60 * 60 * 1000; // 1 hour in milliseconds
 
 async function playMeme(url, interaction) {
   if (!interaction || !interaction?.member || !interaction?.member?.voice?.channel) return;
 
-  const connection = joinVoiceChannel({
-    channelId: interaction?.member?.voice?.channel?.id,
-    guildId: interaction?.guild?.id,
-    adapterCreator: interaction?.guild?.voiceAdapterCreator,
-  });
+  const voiceChannel = interaction.member.voice.channel;
+  const connection = joinChannel(voiceChannel, interaction.guild);
 
   const player = createAudioPlayer();
   const song = createAudioResource(url);
   player.play(song);
   connection.subscribe(player);
 
-  player.on(AudioPlayerStatus.Idle, () => {
-    connection.destroy();
+  clearTimeoutBot();
+  startDisconnectTimer(voiceChannel);
+}
+
+function joinChannel(voiceChannel) {
+  const connection = joinVoiceChannel({
+    channelId: voiceChannel.id,
+    guildId: voiceChannel.guild.id,
+    adapterCreator: voiceChannel.guild.voiceAdapterCreator,
   });
+
+  return connection;
 }
 
 function body() {
@@ -79,7 +87,8 @@ async function execute({ interaction }) {
 }
 
 async function interaction({interaction}) {
-  if (interaction.isButton) {
+  if (interaction.isButton && interaction?.message?.interaction.commandName === 'play') {
+    clearTimeoutBot();
     const sound = sounds.find(sound => sound.id === interaction.customId);
 
     if (!sound) {
@@ -92,8 +101,28 @@ async function interaction({interaction}) {
   }
 }
 
+function startDisconnectTimer(voiceChannel) {
+  disconnectTimeout = setTimeout(() => {
+    disconnectBot(voiceChannel);
+  }, TIMEOUT_DISCONNECT);
+}
+
+function disconnectBot(voiceChannel) {
+  clearTimeoutBot();
+  const connection = getVoiceConnection(voiceChannel.guild.id);
+  if (connection) {
+    connection.destroy();
+    console.log('Bot has left the voice channel due to inactivity.');
+  }
+}
+
+function clearTimeoutBot() {
+  clearTimeout(disconnectTimeout);
+}
+
 module.exports = {
   body,
   execute,
   interaction,
+  disconnectBot,
 }

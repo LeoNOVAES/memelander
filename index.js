@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits, Collection, REST } = require('discord.js');
 const { Player } = require('discord-player');
 const { Routes } = require('discord-api-types/v9');
+const { disconnectBot } = require('./commands/play-options');
 const fs = require('fs');
 const path = require('path');
 require('dotenv/config');
@@ -35,6 +36,8 @@ function createClient() {
     const body = command.body()
 
     if (!body) continue;
+
+    console.log(`Command ${body.name} loaded!`);
 
     client.commands.set(body.name, command);
     COMMANDS.push(body.toJSON());
@@ -116,15 +119,29 @@ client.on('interactionCreate', async interaction => {
       return;
     }
   
+    // TODO: review waht better to do .
+    // if (interaction.message.interaction.commandName === 'play' && interaction.isButton()) {
+    //   await interactionPlay({ interaction });
+    // }
+
     for (const [key] of client.commands.entries()) {
       const command = client.commands.get(key);
 
-      if (interaction) {
+      if (interaction && command?.interaction) {
         await command.interaction({ interaction });
       }
     };
+    // END TODO
   } catch (error) {
     console.log('Error on interactionCreate:', error);
+  }
+});
+
+client.on('voiceStateUpdate', (oldState, newState) => {
+  const voiceChannel = oldState.channel || newState.channel;
+
+  if (voiceChannel && voiceChannel.members.size === 1 && voiceChannel.members.has(client.user.id)) {
+    disconnectBot(voiceChannel);
   }
 });
 
