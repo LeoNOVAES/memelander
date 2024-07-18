@@ -1,5 +1,8 @@
-const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, InteractionType } = require('discord.js');
+const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, InteractionType, ButtonStyle, ButtonBuilder } = require('discord.js');
 const sounds = require('../sounds/sounds.json');
+const { getInstantSound } = require('../scrapers/my-instants');
+const path = require('path');
+const fs = require('fs');
 
 function body() {
   return new SlashCommandBuilder()
@@ -8,24 +11,48 @@ function body() {
 }
 
 async function execute({ interaction }) {
+  
   if (interaction.isCommand() && interaction.commandName === 'add') {
-    await openFormModal(interaction);
-    return;
+    const action = new ActionRowBuilder();
+
+    action.addComponents(new ButtonBuilder()
+      .setCustomId('myinstants')
+      .setLabel('Criar som do myinstants')
+      .setStyle(ButtonStyle.Primary));
+
+    await interaction.reply({ content: 'Escolha alguma dessas formas de criacao de audio: ', components: [action] });
   }
 }
 
 async function interaction({ interaction }) {
+  if (interaction.isButton && interaction.customId === 'myinstants' && interaction?.message?.interaction.commandName === 'add') {
+    await openInstantsFormModal(interaction);
+    return;
+  }
+
+  if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_instances_modal') {
+    const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input'));
+
+    if (sound?.error) {
+      await interaction.reply({ content: sound.error, ephemeral: true });
+      return;
+    }
+
+    const result = await addSound(sound.name, sound.url);
+    await interaction.reply({ content: result, ephemeral: true });
+    return;
+  }
+
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_modal') {
     const name = interaction.fields.getTextInputValue('name_input');
     const url = interaction.fields.getTextInputValue('url_input');
-    const result = addSound(name, url);
-
-    await interaction.reply({ content: result.message, ephemeral: true });
+    const result = await addSound(name, url);
+    await interaction.reply({ content: result || '', ephemeral: true });
     return;
   }
 }
 
-function addSound(name, url) {
+async function addSound(name, url) {
   console.log('Adding sound:', name, url);
   const regex = /[-\s]/g;
   const customId = name.trim().replace(regex, '_').toUpperCase() ;
@@ -33,7 +60,7 @@ function addSound(name, url) {
 
   if (exists) {
     console.log('Sound already exists');
-    return { success: false, message: 'Som ja existe tente outro som!' };
+    return `${name} ja existe tente outro som!`;
   }
 
   const sound = {
@@ -43,10 +70,11 @@ function addSound(name, url) {
   };
 
   sounds.push(sound);
-  return { success: true, message: 'Som adicionado com sucesso!' };
+  await rewriteJsonFileAsync(sounds);
+  return `${name} adicionado com sucesso!`;
 }
 
-async function openFormModal(interaction) {
+async function openUrlFormModal(interaction) {
   const modal = new ModalBuilder()
     .setCustomId('add_modal')
     .setTitle('Adicione um novo meme');
@@ -64,6 +92,34 @@ async function openFormModal(interaction) {
   const urlRow = new ActionRowBuilder().addComponents(urlInput);
   modal.addComponents(nameRow, urlRow);
   await interaction.showModal(modal);
+}
+
+async function openInstantsFormModal(interaction) {
+  const modal = new ModalBuilder()
+    .setCustomId('add_instances_modal')
+    .setTitle('Adicione um novo meme pelo My Instants');
+  const urlInput = new TextInputBuilder()
+    .setCustomId('url_input')
+    .setLabel('URL')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+  const urlRow = new ActionRowBuilder().addComponents(urlInput);
+  modal.addComponents(urlRow);
+  await interaction.showModal(modal);
+}
+
+function rewriteJsonFileAsync(data) {
+  const soundsPath = path.join(__dirname, '../sounds/sounds.json');
+
+  return new Promise((resolve, reject) => {
+    fs.writeFile(soundsPath, JSON.stringify(data, null, 2), 'utf8', (err) => {
+      if (err) {
+        reject(`Error writing file to disk: ${err}`);
+      } else {
+        resolve('JSON data is saved.');
+      }
+    });
+  });
 }
 
 module.exports = {
