@@ -2,7 +2,12 @@ const puppeteer = require('puppeteer');
 
 async function setupBrowser() {
   try {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({    
+      headless: true,
+      args: [
+        '--no-sandbox'
+      ] 
+    });
     const page = await browser.newPage();
   
     return page;
@@ -21,6 +26,7 @@ async function getInstantSound(url) {
   const page = await setupBrowser();
 
   await page.goto(url);
+  console.log('page', page);
 
   const sound = await page.evaluate(() => {
     const name = document.querySelector('#instant-page-title').innerText;
