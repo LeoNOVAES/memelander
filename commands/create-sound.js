@@ -20,7 +20,7 @@ async function execute({ interaction }) {
       .setLabel('Criar som do myinstants')
       .setStyle(ButtonStyle.Primary));
 
-    await interaction.reply({ content: 'Escolha alguma dessas formas de criacao de audio: ', components: [action] });
+    await interaction.reply({ content: 'Escolha alguma dessas formas de criacao de audio: ', components: [action], ephemeral: true });
   }
 }
 
@@ -31,17 +31,20 @@ async function interaction({ interaction }) {
   }
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_instances_modal') {
+    await interaction.deferReply();
+
     const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input'));
     console.log('[INFO] Adding sound from My Instants - ', interaction);
 
     if (sound?.error) {
-      await interaction.reply({ content: sound.error, ephemeral: true });
+      await interaction.reply();
+      await interaction.editReply({ content: sound.error, ephemeral: true });
       return;
     }
 
     const result = await addSound(sound.name, sound.url);
     console.log('[INFO] added sound from My Instants - ', result);
-    await interaction.reply({ content: result || '', ephemeral: true });
+    await interaction.editReply({ content: `${interaction.user.username} adicionou o meme ${result}`  });
     return;
   }
 
@@ -73,7 +76,7 @@ async function addSound(name, url) {
 
   sounds.push(sound);
   await rewriteJsonFileAsync(sounds);
-  return `${name} adicionado com sucesso!`;
+  return name;
 }
 
 async function openUrlFormModal(interaction) {

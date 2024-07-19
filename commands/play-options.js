@@ -78,7 +78,7 @@ async function execute({ interaction }) {
   const { voice } = interaction.member;
 
   if (!voice.channel) {
-    interaction.reply('Voce precisa estar em um canal de VOZ para executar esse comando!');
+    interaction.reply({ content: 'Voce precisa estar em um canal de voz para usar esse comando!', ephemeral: true });
     return;
   }
 
@@ -92,7 +92,7 @@ async function interaction({interaction}) {
     const sound = sounds.find(sound => sound.id === interaction.customId);
 
     if (!sound) {
-      await interaction.reply('meme nao encontrado!');
+      await interaction.reply({ content: 'meme nao encontrado!', ephemeral: true });
       return;
     }
 
