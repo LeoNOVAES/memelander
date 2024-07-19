@@ -26,8 +26,6 @@ async function getInstantSound(url) {
   const page = await setupBrowser();
 
   await page.goto(url);
-  console.log('page', page);
-
   const sound = await page.evaluate(() => {
     const name = document.querySelector('#instant-page-title').innerText;
     const url = `https://www.myinstants.com${document.querySelector('#instant-page-button-element').getAttribute('data-url')}`;
