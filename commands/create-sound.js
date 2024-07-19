@@ -39,8 +39,7 @@ async function interaction({ interaction }) {
     }
 
     const result = await addSound(sound.name, sound.url);
-    await interaction.reply({ content: result, ephemeral: true });
-    return;
+    await interaction.reply({ content: result || '', ephemeral: true });
   }
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_modal') {
