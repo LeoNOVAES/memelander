@@ -49,7 +49,7 @@ async function interaction({ interaction }) {
       return;
     }
 
-    await interaction.editReply({ content: `${interaction.user.username} adicionou o meme ${result}`  });
+    await interaction.editReply({ content: `${interaction.user.username} adicionou o meme ${result.content}`  });
     return;
   }
 
