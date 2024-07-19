@@ -65,7 +65,7 @@ async function addSound(name, url) {
 
   if (exists) {
     console.log('Sound already exists');
-    return `${name} ja existe tente outro som!`;
+    return { success: false , content: `${name} ja existe tente outro meme!` };
   }
 
   const sound = {
@@ -76,7 +76,7 @@ async function addSound(name, url) {
 
   sounds.push(sound);
   await rewriteJsonFileAsync(sounds);
-  return name;
+  return { success: true , content: name };
 }
 
 async function openUrlFormModal(interaction) {
