@@ -32,6 +32,7 @@ async function interaction({ interaction }) {
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_instances_modal') {
     const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input'));
+    console.log('[INFO] Adding sound from My Instants - ', interaction);
 
     if (sound?.error) {
       await interaction.reply({ content: sound.error, ephemeral: true });
@@ -39,16 +40,18 @@ async function interaction({ interaction }) {
     }
 
     const result = await addSound(sound.name, sound.url);
-    await interaction.reply({ content: result || '', ephemeral: true });
-  }
-
-  if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_modal') {
-    const name = interaction.fields.getTextInputValue('name_input');
-    const url = interaction.fields.getTextInputValue('url_input');
-    const result = await addSound(name, url);
+    console.log('[INFO] added sound from My Instants - ', result);
     await interaction.reply({ content: result || '', ephemeral: true });
     return;
   }
+
+  // if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_modal') {
+  //   const name = interaction.fields.getTextInputValue('name_input');
+  //   const url = interaction.fields.getTextInputValue('url_input');
+  //   const result = await addSound(name, url);
+  //   await interaction.reply({ content: result || '', ephemeral: true });
+  //   return;
+  // }
 }
 
 async function addSound(name, url) {
