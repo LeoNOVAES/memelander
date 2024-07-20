@@ -93,7 +93,7 @@ async function execute({ interaction }) {
     const end = start + 25;
     const rows = createRowGroup(start, end, ButtonStyle.Primary);
  
-    await interaction.followUp({ content: `Pagina ${i} de memes disponiveis:`, components: rows });
+    await interaction.followUp({ content: `Pagina ${i+1} de memes disponiveis:`, components: rows });
   }
 }
 
