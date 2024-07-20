@@ -17,7 +17,7 @@ async function execute({ interaction }) {
 
     action.addComponents(new ButtonBuilder()
       .setCustomId('myinstants')
-      .setLabel('Criar som do myinstants')
+      .setLabel('Criar som pelo myinstants')
       .setStyle(ButtonStyle.Primary));
 
     await interaction.reply({ content: 'Escolha alguma dessas formas de criacao de audio: ', components: [action], ephemeral: true });
@@ -32,9 +32,7 @@ async function interaction({ interaction }) {
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_instances_modal') {
     await interaction.deferReply();
-
     const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input'));
-    console.log('[INFO] Adding sound from My Instants - ', interaction);
 
     if (sound?.error) {
       await interaction.editReply({ content: sound.error, ephemeral: true });
@@ -65,7 +63,7 @@ async function interaction({ interaction }) {
 async function addSound(name, url) {
   console.log('Adding sound:', name, url);
   const regex = /[-\s]/g;
-  const customId = name.trim().replace(regex, '_').toUpperCase() ;
+  const customId = 'MEME_' + name.trim().replace(regex, '_').toUpperCase() ;
   const exists = sounds.find(sound => sound.url === url || sound.name === name || sound.id === customId);
 
   if (exists) {

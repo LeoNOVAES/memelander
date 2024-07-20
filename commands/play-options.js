@@ -3,7 +3,6 @@ const { joinVoiceChannel, createAudioResource, AudioPlayerStatus, getVoiceConnec
 const { createAudioPlayer } = require('discord-player');
 const sounds = require('../sounds/sounds.json');
 
-let rows = [];
 let disconnectTimeout;
 const TIMEOUT_DISCONNECT = 60 * 60 * 1000; // 1 hour in milliseconds
 
@@ -38,40 +37,41 @@ function body() {
     .setDescription('play a meme with buttons');
 }
 
-function buildRows(index = 0) {
-  rows = [];
-
+function createRowGroup(start, end) {
+  console.log('creating group row');
   const colors = [
     { color: ButtonStyle.Primary },
     { color: ButtonStyle.Secondary },
     { color: ButtonStyle.Success },
     { color: ButtonStyle.Danger },
     { color: ButtonStyle.Primary },
+    { color: ButtonStyle.Success },
   ]
 
-  const action = new ActionRowBuilder();
-  let count = 0;
-  console.log(`Needs to build ${sounds.length} sounds buttons`);
+  const rows = [];
+  let action = new ActionRowBuilder();
 
-  for (let i = index; i < sounds.length; i++) {
-    if (count === 5) {
-      buildRows(i);
+  for (let i = start; i <= end; i++) {
+    const actionsLength = action.components.length || 0;
+    if (actionsLength === 5) {
       rows.push(action);
-      return;
+      action = new ActionRowBuilder();
     }
+    
+    if (!sounds[i]) break;
 
     action.addComponents(new ButtonBuilder()
-      .setCustomId(sounds[i].id)
-      .setLabel(sounds[i].name)
-      .setStyle(colors[count].color));
-
-    count++;
+        .setCustomId(sounds[i].id)
+        .setLabel(sounds[i].name)
+        .setStyle(colors[actionsLength]?.color));
 
     if (!sounds[i + 1]?.name) {
       rows.push(action);
-      continue;
+      break;
     }
   }
+
+  return rows;
 }
 
 async function execute({ interaction }) {
@@ -82,12 +82,23 @@ async function execute({ interaction }) {
     return;
   }
 
-  buildRows();
-  await interaction.reply({ content: 'Todos os audios disponiveis:', components: [...rows] });
+  await interaction.reply({ content: 'Carregando os memes...', ephemeral: true });
+  
+  const totalRows = Math.ceil(sounds.length/25);
+
+  for (let i = 0; i < totalRows; i++) {
+    const start = i * 25;
+    const end = start + 25;
+    const rows = createRowGroup(start, end, ButtonStyle.Primary);
+
+    await interaction.followUp({ content: 'Todos os memes disponiveis:', components: rows });
+  }
 }
 
 async function interaction({interaction}) {
-  if (interaction.isButton && interaction?.message?.interaction.commandName === 'play') {
+  const from = interaction?.customId.split('_')[0];
+
+  if (interaction.isButton && from === 'MEME') {
     clearTimeoutBot();
     const sound = sounds.find(sound => sound.id === interaction.customId);
 
