@@ -52,12 +52,13 @@ function createRowGroup(start, end) {
   let action = new ActionRowBuilder();
 
   for (let i = start; i <= end; i++) {
-    const actionsLength = action.components.length || 0;
-    if (actionsLength === 5) {
+    const actionsLength = action.components.length;
+
+    if (actionsLength === 5 && sounds[i + 1]?.name) {
       rows.push(action);
       action = new ActionRowBuilder();
     }
-    
+
     if (!sounds[i]) break;
 
     action.addComponents(new ButtonBuilder()
@@ -65,7 +66,7 @@ function createRowGroup(start, end) {
         .setLabel(sounds[i].name)
         .setStyle(colors[actionsLength]?.color));
 
-    if (!sounds[i + 1]?.name) {
+    if (!sounds[i + 1]?.name && actionsLength < 5) {
       rows.push(action);
       break;
     }
@@ -85,12 +86,12 @@ async function execute({ interaction }) {
   await interaction.reply({ content: 'Carregando os memes...', ephemeral: true });
   
   const totalRows = Math.ceil(sounds.length/25);
-
+ 
   for (let i = 0; i < totalRows; i++) {
     const start = i * 25;
     const end = start + 25;
     const rows = createRowGroup(start, end, ButtonStyle.Primary);
-
+ 
     await interaction.followUp({ content: 'Todos os memes disponiveis:', components: rows });
   }
 }
