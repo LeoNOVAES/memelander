@@ -60,10 +60,11 @@ function createRowGroup(start, end) {
     }
 
     if (!sounds[i]) break;
+    const emoji = sounds[i]?.emoji || '🤣';
 
     action.addComponents(new ButtonBuilder()
         .setCustomId(sounds[i].id)
-        .setLabel(sounds[i].name)
+        .setLabel(`${emoji} ${sounds[i].name}`)
         .setStyle(colors[actionsLength]?.color));
 
     if (!sounds[i + 1]?.name && actionsLength < 5) {
@@ -86,13 +87,13 @@ async function execute({ interaction }) {
   await interaction.reply({ content: 'Carregando os memes...', ephemeral: true });
   
   const totalRows = Math.ceil(sounds.length/25);
- 
+
   for (let i = 0; i < totalRows; i++) {
     const start = i * 25;
     const end = start + 25;
     const rows = createRowGroup(start, end, ButtonStyle.Primary);
  
-    await interaction.followUp({ content: 'Todos os memes disponiveis:', components: rows });
+    await interaction.followUp({ content: `Pagina ${i} de memes disponiveis:`, components: rows });
   }
 }
 

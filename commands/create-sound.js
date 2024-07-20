@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, InteractionType, ButtonStyle, ButtonBuilder } = require('discord.js');
+const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, InteractionType, ButtonStyle, ButtonBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 const sounds = require('../sounds/sounds.json');
 const { getInstantSound } = require('../scrapers/my-instants');
 const path = require('path');
@@ -34,12 +34,14 @@ async function interaction({ interaction }) {
     await interaction.deferReply();
     const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input'));
 
+    const emoji = interaction?.fields?.getTextInputValue('emoji_input');
+    
     if (sound?.error) {
       await interaction.editReply({ content: sound.error, ephemeral: true });
       return;
     }
 
-    const result = await addSound(sound.name, sound.url);
+    const result = await addSound(sound.name, sound.url, emoji);
     console.log('[INFO] added sound from My Instants - ', result);
 
     if (!result.success) {
@@ -60,7 +62,7 @@ async function interaction({ interaction }) {
   // }
 }
 
-async function addSound(name, url) {
+async function addSound(name, url, emoji = '🤣') {
   console.log('Adding sound:', name, url);
   const regex = /[-\s]/g;
   const customId = 'MEME_' + name.trim().replace(regex, '_').toUpperCase() ;
@@ -75,6 +77,7 @@ async function addSound(name, url) {
     id: customId,
     name,
     url,
+    emoji,
   };
 
   sounds.push(sound);
@@ -111,8 +114,28 @@ async function openInstantsFormModal(interaction) {
     .setLabel('URL')
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
+
+  // const emojiInput = new TextInputBuilder()
+  //   .setCustomId('emoji_input')
+  //   .setLabel('emoji')
+  //   .setStyle(TextInputStyle.Short)
+  //   .setRequired(false);
+
+  // const selectEmojiInput = new StringSelectMenuOptionBuilder()
+  // .setCustomId('starter')
+  // .setPlaceholder('Make a selection!')
+  // .addOptions(
+  //   new StringSelectMenuOptionBuilder()
+  //     .setLabel('Bulbasaur')
+  //     .setDescription('The dual-type Grass/Poison Seed Pokémon.')
+  //     .setValue('bulbasaur'));
+
   const urlRow = new ActionRowBuilder().addComponents(urlInput);
+  // const emojiRow = new ActionRowBuilder().addComponents(selectEmojiInput);
+
   modal.addComponents(urlRow);
+  // modal.addComponents(emojiRow);
+
   await interaction.showModal(modal);
 }
 
