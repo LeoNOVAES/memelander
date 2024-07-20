@@ -34,14 +34,14 @@ async function interaction({ interaction }) {
     await interaction.deferReply();
     const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input'));
 
-    const emoji = interaction?.fields?.getTextInputValue('emoji_input');
+    // const emoji = interaction?.fields?.getTextInputValue('emoji_input');
     
     if (sound?.error) {
       await interaction.editReply({ content: sound.error, ephemeral: true });
       return;
     }
 
-    const result = await addSound(sound.name, sound.url, emoji);
+    const result = await addSound(sound.name, sound.url);
     console.log('[INFO] added sound from My Instants - ', result);
 
     if (!result.success) {
