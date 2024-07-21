@@ -17,6 +17,7 @@
     "discord-player": "^6.6.10",
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.5",
+    "opusscript": "^0.0.8",
     "puppeteer": "^22.13.1"
   },
   "devDependencies": {
