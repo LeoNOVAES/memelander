@@ -50,16 +50,17 @@ function createRowGroup(start, end) {
 
   const rows = [];
   let action = new ActionRowBuilder();
-
   for (let i = start; i <= end; i++) {
-    const actionsLength = action.components.length;
+    let actionsLength = action.components.length;
 
-    if (actionsLength === 5 && sounds[i + 1]?.name) {
+    if (actionsLength === 5) {
       rows.push(action);
       action = new ActionRowBuilder();
+      actionsLength = 0;
     }
 
     if (!sounds[i]) break;
+
     const emoji = sounds[i]?.emoji || '🤣';
 
     action.addComponents(new ButtonBuilder()
@@ -91,8 +92,8 @@ async function execute({ interaction }) {
   for (let i = 0; i < totalRows; i++) {
     const start = i * 25;
     const end = start + 25;
+
     const rows = createRowGroup(start, end, ButtonStyle.Primary);
- 
     await interaction.followUp({ content: `Pagina ${i+1} de memes disponiveis:`, components: rows });
   }
 }

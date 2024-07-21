@@ -11,7 +11,6 @@ function body() {
 }
 
 async function execute({ interaction }) {
-  
   if (interaction.isCommand() && interaction.commandName === 'add') {
     const action = new ActionRowBuilder();
 
