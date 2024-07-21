@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { joinVoiceChannel, createAudioResource, AudioPlayerStatus, getVoiceConnection } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioResource, getVoiceConnection } = require('@discordjs/voice');
 const { createAudioPlayer } = require('discord-player');
 const sounds = require('../sounds/sounds.json');
 
@@ -13,7 +13,9 @@ async function playMeme(url, interaction) {
   const connection = joinChannel(voiceChannel, interaction.guild);
 
   const player = createAudioPlayer();
-  const song = createAudioResource(url);
+  const song = createAudioResource(url, { inlineVolume: true });
+  audioResource?.volume.setVolume(0.70);
+
   player.play(song);
   connection.subscribe(player);
 
