@@ -44,6 +44,11 @@ async function execute({ interaction }) {
     const action = new ActionRowBuilder();
     resetMemeState();
 
+    if (interaction?.options?.getString('emoji') && !emojiRegex(interaction.options.getString('emoji'))) {
+      await interaction.reply({ content: 'Emoji invalido, tente outro emoji!', ephemeral: true });
+      return;
+    }
+
     setMemeState({
       ...memeState,
       emoji: interaction.options.getString('emoji') || '🤣',
@@ -189,6 +194,11 @@ function rewriteJsonFileAsync(data) {
       }
     });
   });
+}
+
+function emojiRegex(input) {
+  const regexExp = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/gi;
+  return regexExp.test(input);
 }
 
 module.exports = {
