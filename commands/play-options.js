@@ -1,7 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { joinVoiceChannel, getVoiceConnection, createAudioPlayer } = require('@discordjs/voice');
+const { joinVoiceChannel, getVoiceConnection, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 const sounds = require('../sounds/sounds.json');
-const { createAudioResource } = require("discord-voip");
 
 let disconnectTimeout;
 const TIMEOUT_DISCONNECT = 60 * 60 * 1000; // 1 hour in milliseconds
@@ -14,7 +13,7 @@ async function playMeme(url, interaction) {
 
   const player = createAudioPlayer();
   const song = createAudioResource(url, { inlineVolume: true });
-  song?.volume.setVolume(0.50);
+  console.log('playing song', song);
 
   player.play(song);
   connection.subscribe(player);
