@@ -4,22 +4,63 @@ const { getInstantSound } = require('../scrapers/my-instants');
 const path = require('path');
 const fs = require('fs');
 
+let memeState = {
+  id: '',
+  name: '',
+  emoji: '',
+  url: '',
+}
+
+function resetMemeState() {
+  memeState = {
+    id: '',
+    name: '',
+    emoji: '',
+    url: '',
+  }
+}
+
+function setMemeState(state) {
+  memeState = {
+    ...memeState,
+    ...state
+  }
+}
+
+
 function body() {
   return new SlashCommandBuilder()
     .setName('add')
-    .setDescription('add an meme');
+    .setDescription('add an meme')
+    .addStringOption(option =>
+      option.setName('emoji')
+            .setDescription('The emoji to add!')
+            .setRequired(false)
+    )
 }
 
 async function execute({ interaction }) {
   if (interaction.isCommand() && interaction.commandName === 'add') {
     const action = new ActionRowBuilder();
+    resetMemeState();
+
+    setMemeState({
+      ...memeState,
+      emoji: interaction.options.getString('emoji') || '🤣',
+    });
 
     action.addComponents(new ButtonBuilder()
       .setCustomId('myinstants')
+      .setEmoji('🚨')
       .setLabel('Criar som pelo myinstants')
       .setStyle(ButtonStyle.Primary));
 
-    await interaction.reply({ content: 'Escolha alguma dessas formas de criacao de audio: ', components: [action], ephemeral: true });
+    await interaction.reply(
+      { 
+        content: 'Escolha alguma dessas formas de criacao de audio: ', 
+        components: [action],
+        ephemeral: true
+      });
   }
 }
 
@@ -30,17 +71,29 @@ async function interaction({ interaction }) {
   }
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_instances_modal') {
+    const regex = /[-\s]/g;
     await interaction.deferReply();
     const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input'));
+    const customId = 'MEME_' + sound.name.trim().replace(regex, '_').toUpperCase() ;
+    const exists = sounds.find(curr => curr.url === sound.url || curr.name === sound.name || curr.id === customId);
+  
+    if (exists) {
+      console.log('Sound already exists');
+      return { success: false , content: `${memeState.name} ja existe tente outro meme!` };
+    }
 
-    // const emoji = interaction?.fields?.getTextInputValue('emoji_input');
-    
     if (sound?.error) {
       await interaction.editReply({ content: sound.error, ephemeral: true });
       return;
     }
 
-    const result = await addSound(sound.name, sound.url);
+    setMemeState({
+      id: customId,
+      name: sound.name,
+      url: sound.url,
+    })
+
+    const result = await addSound(memeState);
     console.log('[INFO] added sound from My Instants - ', result);
 
     if (!result.success) {
@@ -51,37 +104,23 @@ async function interaction({ interaction }) {
     await interaction.editReply({ content: `${interaction.user.username} adicionou o meme ${result.content}`  });
     return;
   }
-
-  // if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_modal') {
-  //   const name = interaction.fields.getTextInputValue('name_input');
-  //   const url = interaction.fields.getTextInputValue('url_input');
-  //   const result = await addSound(name, url);
-  //   await interaction.reply({ content: result || '', ephemeral: true });
-  //   return;
-  // }
 }
 
-async function addSound(name, url, emoji = '🤣') {
-  console.log('Adding sound:', name, url);
+async function addSound(memeState) {
+  console.log('Adding sound:', memeState.name, memeState.url, memeState.emoji);
   const regex = /[-\s]/g;
-  const customId = 'MEME_' + name.trim().replace(regex, '_').toUpperCase() ;
-  const exists = sounds.find(sound => sound.url === url || sound.name === name || sound.id === customId);
+  const customId = 'MEME_' + memeState.name.trim().replace(regex, '_').toUpperCase() ;
+  const exists = sounds.find(sound => sound.url === memeState.url || sound.name === memeState.name || sound.id === customId);
 
   if (exists) {
     console.log('Sound already exists');
-    return { success: false , content: `${name} ja existe tente outro meme!` };
+    return { success: false , content: `${memeState.name} ja existe tente outro meme!` };
   }
 
-  const sound = {
-    id: customId,
-    name,
-    url,
-    emoji,
-  };
-
-  sounds.push(sound);
+  sounds.push(memeState);
+  resetMemeState();
   await rewriteJsonFileAsync(sounds);
-  return { success: true , content: name };
+  return { success: true , content: memeState.name };
 }
 
 async function openUrlFormModal(interaction) {
