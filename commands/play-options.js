@@ -13,8 +13,7 @@ async function playMeme(url, interaction) {
 
   const player = createAudioPlayer();
   const song = createAudioResource(url, { inlineVolume: true });
-  console.log('playing song', song);
-  song?.volume?.setVolume(0.1);
+  song?.volume?.setVolume(0.5);
 
   player.play(song);
   connection.subscribe(player);
