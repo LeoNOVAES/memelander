@@ -12,7 +12,7 @@ async function playMeme(url, interaction) {
   const connection = joinChannel(voiceChannel, interaction.guild);
 
   const player = createAudioPlayer();
-  const song = createAudioResource(url, { inlineVolume: true });
+  const song = createAudioResource(url);
   console.log('playing song', song);
 
   player.play(song);
