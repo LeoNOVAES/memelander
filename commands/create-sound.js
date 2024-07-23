@@ -79,17 +79,18 @@ async function interaction({ interaction }) {
     const regex = /[-\s]/g;
     await interaction.deferReply();
     const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input'));
+
+    if (sound?.error) {
+      await interaction.editReply({ content: sound.error, ephemeral: true });
+      return;
+    }
+
     const customId = 'MEME_' + sound.name.trim().replace(regex, '_').toUpperCase() ;
     const exists = sounds.find(curr => curr.url === sound.url || curr.name === sound.name || curr.id === customId);
   
     if (exists) {
       console.log('Sound already exists');
       return { success: false , content: `${memeState.name} ja existe tente outro meme!` };
-    }
-
-    if (sound?.error) {
-      await interaction.editReply({ content: sound.error, ephemeral: true });
-      return;
     }
 
     setMemeState({
@@ -114,7 +115,7 @@ async function interaction({ interaction }) {
 async function addSound(memeState) {
   console.log('Adding sound:', memeState.name, memeState.url, memeState.emoji);
   const regex = /[-\s]/g;
-  const customId = 'MEME_' + memeState.name.trim().replace(regex, '_').toUpperCase() ;
+  const customId = 'MEME_' + memeState.name.trim().replace(regex, '_').toUpperCase();
   const exists = sounds.find(sound => sound.url === memeState.url || sound.name === memeState.name || sound.id === customId);
 
   if (exists) {
