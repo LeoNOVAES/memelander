@@ -18,12 +18,7 @@ const setupBrowser = async () => {
 };
 
 const getPage = async () => {
-  if (!browser) {
-    await setupBrowser();
-  };
-
-  console.log('[INFO] create new page');
-
+  await setupBrowser();
   page = await browser.newPage();
   return page;
 }
