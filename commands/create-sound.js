@@ -27,7 +27,6 @@ function setMemeState(state) {
   }
 }
 
-
 function body() {
   return new SlashCommandBuilder()
     .setName('add')

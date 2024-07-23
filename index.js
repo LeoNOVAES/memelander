@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits, Collection, REST } = require('discord.js');
 const { Player } = require('discord-player');
 const { Routes } = require('discord-api-types/v9');
-const { disconnectBot } = require('./commands/play-options');
+const { disconnectBot } = require('./actions');
 const fs = require('fs');
 const path = require('path');
 require('dotenv/config');
@@ -30,7 +30,7 @@ function createClient() {
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const command = require(filePath);
-    
+
     if (!command || !command?.body) continue;
   
     const body = command.body()
