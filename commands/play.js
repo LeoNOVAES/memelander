@@ -3,22 +3,21 @@ const sounds = require('../sounds/sounds.json');
 const { clearTimeoutBot, playMeme } = require('../actions');
 
 function body() {
-  try {    
-    return new SlashCommandBuilder()
-      .setName('play')
-      .setDescription('mostrando opcoes de memes!')
-      .addSubcommand(subCommand => 
-        subCommand.setName('meme')
-          .setDescription('play meme especifico')
-          .addStringOption(option => 
-            option.setName('meme')
-              .setDescription('meme a ser tocado')
-              .setAutocomplete(true)
-              .setRequired(true)
-        ));
-  } catch (error) {
-    console.log('error on body play.js', error);
-  }
+  const slashCommand = new SlashCommandBuilder()
+    .setName('play')
+    .setDescription('mostrando opcoes de memes!');
+
+  slashCommand.addSubcommand(subCommand => 
+    subCommand.setName('meme')
+      .setDescription('play meme especifico')
+      .addStringOption(option => 
+        option.setName('meme')
+          .setDescription('meme a ser tocado')
+          .setAutocomplete(true)
+          .setRequired(true)
+  ));
+
+  return slashCommand;
 }
 
 function createRowGroup(start, end) {
