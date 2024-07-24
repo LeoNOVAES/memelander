@@ -3,21 +3,13 @@ const sounds = require('../sounds/sounds.json');
 const { clearTimeoutBot, playMeme } = require('../actions');
 
 function body() {
-  const slashCommand = new SlashCommandBuilder()
-    .setName('play')
-    .setDescription('mostrando opcoes de memes!');
-
-  slashCommand.addSubcommand(subCommand => 
-    subCommand.setName('meme')
-      .setDescription('play meme especifico')
-      .addStringOption(option => 
-        option.setName('meme')
-          .setDescription('meme a ser tocado')
-          .setAutocomplete(true)
-          .setRequired(true)
-  ));
-
-  return slashCommand;
+  try {    
+    return new SlashCommandBuilder()
+      .setName('play')
+      .setDescription('mostrando opcoes de memes!')
+  } catch (error) {
+    console.log('error on body play.js', error);
+  }
 }
 
 function createRowGroup(start, end) {
@@ -89,10 +81,6 @@ async function executeSubCommandMeme(interaction) {
 }
 
 async function execute({ interaction }) {
-  const executed = await executeSubCommandMeme(interaction);
-
-  if (executed) return;
-
   const { voice } = interaction.member;
 
   if (!voice.channel) {
@@ -113,29 +101,29 @@ async function execute({ interaction }) {
   }
 }
 
-function shuffleSounds() {
-  const shuffled = [...sounds];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
+// function shuffleSounds() {
+//   const shuffled = [...sounds];
+//   for (let i = shuffled.length - 1; i > 0; i--) {
+//       const j = Math.floor(Math.random() * (i + 1));
+//       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+//   }
 
-  return shuffled;
-}
+//   return shuffled;
+// }
 
 async function interaction({ interaction }) {
-  const { commandName } = interaction;
+  // const { commandName } = interaction;
 
-  if (interaction.type === InteractionType.ApplicationCommandAutocomplete && commandName === 'play') {
-    const focusedValue = interaction.options.getFocused();
-    const shuffledSounds = shuffleSounds();
-    const filtered = shuffledSounds.filter(sound => sound.name.toLowerCase().includes(focusedValue.toLowerCase()));
-    const sliced = filtered.slice(0, 24);
+  // if (interaction.type === InteractionType.ApplicationCommandAutocomplete && commandName === 'play') {
+  //   const focusedValue = interaction.options.getFocused();
+  //   const shuffledSounds = shuffleSounds();
+  //   const filtered = shuffledSounds.filter(sound => sound.name.toLowerCase().includes(focusedValue.toLowerCase()));
+  //   const sliced = filtered.slice(0, 24);
 
-    await interaction.respond(
-      sliced.map(sound => ({ name: `${sound.emoji || '😄'}  ${sound.name}` , value: sound.id }))
-    );
-  }
+  //   await interaction.respond(
+  //     sliced.map(sound => ({ name: `${sound.emoji || '😄'}  ${sound.name}` , value: sound.id }))
+  //   );
+  // }
 
   if (interaction.type === InteractionType.MessageComponent) {
     const from = interaction?.customId.split('_')[0];
