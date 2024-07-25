@@ -4,12 +4,17 @@ const { Routes } = require('discord-api-types/v9');
 const { disconnectBot } = require('./actions');
 const fs = require('fs');
 const path = require('path');
+const { connect, close } = require('./infra/mongodb');
 require('dotenv/config');
 
 const CHANNEL_NAME = 'memelander';
 const CHANNEL_IDS = [];
 const COMMANDS = [];
 const DEV_GUILD_ID = process.env.DEV_GUILD_ID;
+
+async function main() {
+  await connect();
+}
 
 function createClient() {
   const client = new Client({
@@ -118,11 +123,6 @@ client.on('interactionCreate', async interaction => {
   
       return;
     }
-  
-    // TODO: review waht better to do .
-    // if (interaction.message.interaction.commandName === 'play' && interaction.isButton()) {
-    //   await interactionPlay({ interaction });
-    // }
 
     for (const [key] of client.commands.entries()) {
       const command = client.commands.get(key);
@@ -131,7 +131,6 @@ client.on('interactionCreate', async interaction => {
         await command.interaction({ interaction });
       }
     };
-    // END TODO
   } catch (error) {
     console.log('Error on interactionCreate:', error);
   }
@@ -146,3 +145,17 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 });
 
 client.login(process.env.TOKEN);
+
+process.on('SIGINT', async () => {
+  console.log('Received SIGINT. Closing MongoDB connection...');
+  await close();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('Received SIGTERM. Closing MongoDB connection...');
+  await close();
+  process.exit(0);
+});
+
+main();

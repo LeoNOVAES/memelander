@@ -1,4 +1,4 @@
-const browser = require('../scrapers/browser');
+const browser = require('../browser');
 
 async function getInstantSound(url) {
   const regex = /^https:\/\/www\.myinstants\.com(\/.*)?$/;

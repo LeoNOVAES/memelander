@@ -1,11 +1,9 @@
-const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, InteractionType, ButtonStyle, ButtonBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
-const sounds = require('../sounds/sounds.json');
-const { getInstantSound } = require('../scrapers/my-instants');
-const path = require('path');
-const fs = require('fs');
+const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, InteractionType, ButtonStyle, ButtonBuilder } = require('discord.js');
+const { getInstantSound } = require('../repository/my-instants.repository');
+const { repository } = require('../repository/memes.repository');
 
 let memeState = {
-  id: '',
+  memeId: '',
   name: '',
   emoji: '',
   url: '',
@@ -13,7 +11,7 @@ let memeState = {
 
 function resetMemeState() {
   memeState = {
-    id: '',
+    memeId: '',
     name: '',
     emoji: '',
     url: '',
@@ -84,16 +82,24 @@ async function interaction({ interaction }) {
       return;
     }
 
-    const customId = 'MEME_' + sound.name.trim().replace(regex, '_').toUpperCase() ;
-    const exists = sounds.find(curr => curr.url === sound.url || curr.name === sound.name || curr.id === customId);
-  
-    if (exists) {
+    const customId = 'MEME_' + sound.name.trim().replace(regex, '_').toUpperCase();
+    
+    const query = repository.or(
+      { url: sound.url }, 
+      { name: sound.name }, 
+      { memeId: customId }
+    );
+
+    const exists = await repository.findAll(query);
+
+    if (exists.length) {
       console.log('Sound already exists');
-      return { success: false , content: `${memeState.name} ja existe tente outro meme!` };
+      await interaction.editReply({ content: `${sound.name} ja existe tente outro meme!`, ephemeral: true });
+      return;
     }
 
     setMemeState({
-      id: customId,
+      memeId: customId,
       name: sound.name,
       url: sound.url,
     })
@@ -112,40 +118,10 @@ async function interaction({ interaction }) {
 }
 
 async function addSound(memeState) {
-  console.log('Adding sound:', memeState.name, memeState.url, memeState.emoji);
-  const regex = /[-\s]/g;
-  const customId = 'MEME_' + memeState.name.trim().replace(regex, '_').toUpperCase();
-  const exists = sounds.find(sound => sound.url === memeState.url || sound.name === memeState.name || sound.id === customId);
-
-  if (exists) {
-    console.log('Sound already exists');
-    return { success: false , content: `${memeState.name} ja existe tente outro meme!` };
-  }
-
-  sounds.push(memeState);
+  console.log('Adding sound:', memeState.name, memeState.url, memeState.emoji, memeState.memeId);
+  await repository.store(memeState);
   resetMemeState();
-  await rewriteJsonFileAsync(sounds);
   return { success: true , content: memeState.name };
-}
-
-async function openUrlFormModal(interaction) {
-  const modal = new ModalBuilder()
-    .setCustomId('add_modal')
-    .setTitle('Adicione um novo meme');
-  const nameInput = new TextInputBuilder()
-    .setCustomId('name_input')
-    .setLabel('Nome')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
-  const urlInput = new TextInputBuilder()
-    .setCustomId('url_input')
-    .setLabel('URL')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
-  const nameRow = new ActionRowBuilder().addComponents(nameInput);
-  const urlRow = new ActionRowBuilder().addComponents(urlInput);
-  modal.addComponents(nameRow, urlRow);
-  await interaction.showModal(modal);
 }
 
 async function openInstantsFormModal(interaction) {
@@ -158,42 +134,11 @@ async function openInstantsFormModal(interaction) {
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
-  // const emojiInput = new TextInputBuilder()
-  //   .setCustomId('emoji_input')
-  //   .setLabel('emoji')
-  //   .setStyle(TextInputStyle.Short)
-  //   .setRequired(false);
-
-  // const selectEmojiInput = new StringSelectMenuOptionBuilder()
-  // .setCustomId('starter')
-  // .setPlaceholder('Make a selection!')
-  // .addOptions(
-  //   new StringSelectMenuOptionBuilder()
-  //     .setLabel('Bulbasaur')
-  //     .setDescription('The dual-type Grass/Poison Seed Pokémon.')
-  //     .setValue('bulbasaur'));
 
   const urlRow = new ActionRowBuilder().addComponents(urlInput);
-  // const emojiRow = new ActionRowBuilder().addComponents(selectEmojiInput);
-
   modal.addComponents(urlRow);
-  // modal.addComponents(emojiRow);
 
   await interaction.showModal(modal);
-}
-
-function rewriteJsonFileAsync(data) {
-  const soundsPath = path.join(__dirname, '../sounds/sounds.json');
-
-  return new Promise((resolve, reject) => {
-    fs.writeFile(soundsPath, JSON.stringify(data, null, 2), 'utf8', (err) => {
-      if (err) {
-        reject(`Error writing file to disk: ${err}`);
-      } else {
-        resolve('JSON data is saved.');
-      }
-    });
-  });
 }
 
 function emojiRegex(input) {

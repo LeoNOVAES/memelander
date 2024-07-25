@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionType } = require("discord.js");
-const sounds = require('../sounds/sounds.json');
 const { clearTimeoutBot, playMeme } = require('../actions');
+const { repository } = require('../repository/memes.repository');
 
 function body() {
   try {    
@@ -12,7 +12,7 @@ function body() {
   }
 }
 
-function createRowGroup(start, end) {
+async function sendRowGroupFollowUp(pages, interaction) {
   console.log('creating group row');
   const colors = [
     { color: ButtonStyle.Primary },
@@ -23,33 +23,35 @@ function createRowGroup(start, end) {
     { color: ButtonStyle.Success },
   ]
 
-  const rows = [];
-  let action = new ActionRowBuilder();
-  for (let i = start; i <= end; i++) {
-    let actionsLength = action.components.length;
-    console.log('actions length', actionsLength);
-    if (actionsLength === 5) {
-      rows.push(action);
-      action = new ActionRowBuilder();
-      actionsLength = 0;
+  for (let i = 0; i < pages; i++) {
+    const rows = [];
+    let action = new ActionRowBuilder();
+    const sounds = await repository.findAllPaginated(i + 1);
+    
+    if (!sounds || !sounds.length) return;
+
+    for (let j = 0; j < sounds.length; j++) {
+      let actionsLength = action.components.length;
+      const emoji = sounds[j]?.emoji || '🤣';
+
+      if (actionsLength === 5) {
+        rows.push(action);
+        action = new ActionRowBuilder();
+        actionsLength = action.components.length;
+      }
+  
+      action.addComponents(new ButtonBuilder()
+          .setCustomId(sounds[j].memeId)
+          .setLabel(`${emoji} ${sounds[j].name}`)
+          .setStyle(colors[actionsLength]?.color));
+
+      if (!sounds[j + 1]?.name) {
+        rows.push(action);
+      }
     }
 
-    if (!sounds[i]) break;
-
-    const emoji = sounds[i]?.emoji || '🤣';
-
-    action.addComponents(new ButtonBuilder()
-        .setCustomId(sounds[i].id)
-        .setLabel(`${emoji} ${sounds[i].name}`)
-        .setStyle(colors[actionsLength]?.color));
-
-    if (!sounds[i + 1]?.name && actionsLength < 5) {
-      rows.push(action);
-      break;
-    }
+    await interaction.followUp({ content: `Pagina ${i+1} de memes disponiveis:`, components: [...rows] });
   }
-
-  return rows;
 }
 
 async function execute({ interaction }) {
@@ -61,17 +63,10 @@ async function execute({ interaction }) {
   }
 
   await interaction.reply({ content: 'Carregando os memes...', ephemeral: true });
-  
-  const totalRows = Math.ceil(sounds.length/25);
-  console.log('total rows', totalRows);
-  for (let i = 0; i < totalRows; i++) {
-    const start = i * 25;
-    const end = start + 25;
-
-    const rows = createRowGroup(start, end, ButtonStyle.Primary);
-    console.log('rows', rows.length);
-    await interaction.followUp({ content: `Pagina ${i+1} de memes disponiveis:`, components: rows });
-  }
+  const total = await repository.count();
+  const totalPages = Math.ceil(total / 25);
+  console.log('total totalPages', totalPages);
+  await sendRowGroupFollowUp(totalPages, interaction);
 }
 
 async function interaction({ interaction }) {
@@ -80,7 +75,8 @@ async function interaction({ interaction }) {
   
     if (interaction.isButton && from === 'MEME') {
       clearTimeoutBot();
-      const sound = sounds.find(sound => sound.id === interaction.customId);
+
+      const sound = await repository.findById(interaction.customId);
   
       if (!sound) {
         await interaction.reply({ content: 'meme nao encontrado!', ephemeral: true });
