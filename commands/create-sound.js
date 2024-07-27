@@ -2,11 +2,7 @@ const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, ActionRowBuilder, T
 const { getInstantSound } = require('../repository/my-instants.repository');
 const { repository } = require('../repository/memes.repository');
 const { googleStorage } = require('../repository/storage.repository');
-const fetch = require('node-fetch');
-const mp3Duration = require('mp3-duration');
-
-const THREE_MB = 3 * 1024 * 1024;
-const MAX_DURATION_SEC = 30;
+const { emojiRegex } = require('../utils/regex-util');
 
 let memeState = {
   memeId: '',
@@ -86,74 +82,18 @@ async function interaction({ interaction }) {
 
   if (interaction.isButton && interaction.customId === 'file' && interaction?.message?.interaction?.commandName === 'add') {
     console.log('File button clicked');
+    openFileFormModal(interaction);
+  };
+
+  if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_file_modal') {
+    console.log('File form submitted');
     await interaction.reply({ 
-      content: `Anexe algum arquivo MP3 ate ${MAX_DURATION_SEC} segundos de duracao e o maximo 3mb`, 
+      content: `Anexe algum arquivo MP3 ate 30 segundos de duracao e o maximo 3mb`, 
       ephemeral: true 
     });
 
-    const filter = m => m.author.id === interaction.user.id && m.attachments.size > 0;
-    const collector = interaction.channel.createMessageCollector({ filter, max: 1, time: 60000 });
-
-    collector.on('collect', async message => {
-      const attachment = message.attachments.first();
-
-      if (!attachment.name.endsWith('.mp3')) {
-        await message.reply('Por favor anexe um MP3 valido.');
-        await message.delete();
-        return;
-      }
-
-      const { buffer, filename } = await getBufferAndFileName(attachment.url);
-
-      if (buffer.length > THREE_MB) {
-        console.log('File too big');
-        await message.reply(`O arquivo deve ser menor que 3mb.`);
-        await message.delete();
-        return;
-      }
-
-      const duration = await mp3Duration(buffer);
-      console.log(`Duration: ${duration} seconds`);
-
-      if (duration > MAX_DURATION_SEC) {
-        await message.reply({ content: `O audio deve ser menor que ${MAX_DURATION_SEC} segundos.`, ephemeral: true });
-        await message.delete();
-        return;
-      }
-
-      const query = repository.or(
-        { name: filename },
-      );
-
-      const exists = await repository.findAll(query);
-  
-      if (exists.length) {
-        console.log('Sound already exists');
-        await message.reply({ content: `${filename} ja existe tente outro meme!`, ephemeral: true });
-        await message.delete();
-        return;
-      }
-
-      const url = await googleStorage.add(buffer, filename);
-      const customId = 'MEME_' + filename.trim().replace(/[-\s]/g, '_').toUpperCase();
-
-      setMemeState({
-        memeId: customId,
-        name: filename,
-        url,
-      });
-
-      await addSound(memeState);
-      console.log('MP3 file attached');
-      await message.reply({ content: `${interaction.user.username} adicionou o meme ${filename}`});
-      await message.delete();
-    });
-
-    collector.on('end', collected => {
-        if (collected.size === 0) {
-            interaction.followUp('Voce nao anexou nenhum arquivo.');
-        }
-    });
+    await collectionUploadFile(interaction);
+    return;
   }
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_instances_modal') {
@@ -224,34 +164,81 @@ async function openInstantsFormModal(interaction) {
   await interaction.showModal(modal);
 }
 
-function emojiRegex(input) {
-  const regexExp = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/gi;
-  return regexExp.test(input);
+async function openFileFormModal(interaction) {
+  const modal = new ModalBuilder()
+    .setCustomId('add_file_modal')
+    .setTitle('Adicione um novo meme');
+  const urlInput = new TextInputBuilder()
+    .setCustomId('name_input')
+    .setLabel('Nome')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+
+  const urlRow = new ActionRowBuilder().addComponents(urlInput);
+  modal.addComponents(urlRow);
+
+  await interaction.showModal(modal);
 }
 
-async function getBufferAndFileName(urlFile) {
-  console.log('Fetching file from url:', urlFile );
-  const response = await fetch(urlFile);
-  if (!response.ok) return;
+async function collectionUploadFile(interaction) {
+  const filter = m => m.author.id === interaction.user.id && m.attachments.size > 0;
+  const collector = interaction.channel.createMessageCollector({ filter, max: 1, time: 60000 });
 
-  const buffer = await response.buffer();
-  const disposition = response.headers.get('content-disposition');
-  let filename = 'default.mp3';
+  collector.on('collect', async message => {
+    const name = interaction.fields.getTextInputValue('name_input')
+    const attachment = message.attachments.first();
 
-  if (disposition && disposition.includes('filename=')) {
-      const match = disposition.match(/filename="?(.+?)"?(;|$)/);
-      if (match && match[1]) {
-          filename = match[1];
+    if (!name) {
+      await message.reply('Por favor escolha um nome valido.');
+      await message.delete();
+      return
+    };
+
+    if (!attachment.name.endsWith('.mp3')) {
+      await message.reply('Por favor anexe um MP3 valido.');
+      await message.delete();
+      return;
+    }
+
+    const query = repository.or(
+      { name },
+    );
+
+    const exists = await repository.findAll(query);
+
+    if (exists.length) {
+      console.log('Meme already exists');
+      await message.reply({ content: `${name} ja existe tente outro meme!`, ephemeral: true });
+      await message.delete();
+      return;
+    }
+
+    const customId = 'MEME_' + name.trim().replace(/[-\s]/g, '_').toUpperCase();
+    const result = await googleStorage.add(attachment.url, customId);
+
+    if (!result.success) {
+      await message.reply({ content: result.content, ephemeral: true });
+      await message.delete();
+      return;
+    }
+
+    setMemeState({
+      memeId: customId,
+      name,
+      url: result.content,
+    });
+
+    await addSound(memeState);
+    console.log('MP3 file attached');
+    await message.reply({ content: `${interaction.user.username} adicionou o meme ${name}`});
+    await message.delete();
+  });
+
+  collector.on('end', collected => {
+      if (collected.size === 0) {
+        interaction.followUp('Voce nao anexou nenhum arquivo.');
       }
-  } else {
-      filename = path.basename(url);
-  }
-
-  if (filename.endsWith('.mp3')) {
-    filename = filename.slice(0, -4);
-  }
-
-  return { buffer, filename };
+  });
 }
 
 module.exports = {

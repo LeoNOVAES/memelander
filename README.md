@@ -43,9 +43,8 @@ You might wanna check the .env.example as well.
 
 - Add meme sound via mp3
 - Add meme sound via instant sounds
-- Show added memes
-- Paginate added memes
-
+- Shows memes added through an argument search
+- Buttons paginated with added memes
 
 
 ## Autores
