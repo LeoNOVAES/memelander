@@ -40,7 +40,7 @@ const playMeme = async (url, interaction) => {
 
   const player = createAudioPlayer();
   const song = createAudioResource(url, { inlineVolume: true });
-  song?.volume?.setVolume(0.5);
+  song?.volume?.setVolume(0.4);
 
   player.play(song);
   connection.subscribe(player);
