@@ -39,7 +39,7 @@ async function execute({ interaction }) {
 
     await playMeme(sounds[0].url, interaction);
     clearTimeoutBot();
-    await interaction.reply(`${interaction.user.username} invocou em ${sounds[0].name}!`);
+    await interaction.reply(`${interaction.user.username} invocou em  ${sounds[0]?.emoji || '😄'} ${sounds[0].name}!`);
   }
 }
 

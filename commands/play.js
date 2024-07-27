@@ -50,7 +50,7 @@ async function sendRowGroupFollowUp(pages, interaction) {
       }
     }
 
-    await interaction.followUp({ content: `Pagina ${i+1} de memes disponiveis:`, components: [...rows] });
+    await interaction.followUp({ content: `Pagina ${i+1} de memes disponiveis:`, components: [...rows],  ephemeral: true  });
   }
 }
 

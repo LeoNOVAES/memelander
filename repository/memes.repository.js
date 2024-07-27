@@ -7,8 +7,10 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
   emoji: { type: String, required: false } ,
   url: { type: String, required: true, unique: true }
+},{
+  timestamps: true
 });
-  
+
 const Meme = mongoose.model('Meme', userSchema);
 
 repository.store = async (meme) => {

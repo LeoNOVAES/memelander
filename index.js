@@ -61,14 +61,7 @@ function createClient() {
 async function registerCommands(client) {
   let guildIDS = [];
 
-  if (process.env.NODE_ENV !== 'development') {
-    guildIDS = client.guilds.cache.map(guild => {
-      if (DEV_GUILD_ID === guild.id) return;
-      return guild.id;
-    });
-  } else {
-    guildIDS = [DEV_GUILD_ID];
-  }
+  guildIDS = client.guilds.cache.map(guild => guild.id);
 
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
   for (guildID of guildIDS) {
@@ -97,10 +90,18 @@ client.on('ready', async () => {
   console.log(`Bot is ready!`);
 });
 
-client.on('messageCreate', (message) => {
+client.on('messageCreate', async (message) => {
   if (message.content === 'ping') {
     message.reply('pong');
   }
+
+  for (const [key] of client.commands.entries()) {
+    const command = client.commands.get(key);
+
+    if (message && command?.messages) {
+      await command.messages({ message });
+    }
+  };
 });
 
 client.on('interactionCreate', async interaction => {
