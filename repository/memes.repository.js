@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({
   memeId: { type: String, required: true, unique: true },
   name: { type: String, required: true, unique: true },
   emoji: { type: String, required: false },
-  url: { type: String, required: true, unique: true }
+  url: { type: String, required: true, unique: true },
+  volume: { type: Number, default: 0.4 }
 }, {
   timestamps: true
 });
@@ -19,6 +20,14 @@ repository.store = async (meme) => {
     await newMeme.save();
   } catch (error) {
     console.error('Error storing meme:', error);
+  }
+}
+
+repository.upsert = async (meme) => {
+  try {
+    await Meme.updateOne({ memeId: meme.memeId }, meme, { upsert: true });
+  } catch (error) {
+    console.error('Error upserting meme:', error);
   }
 }
 

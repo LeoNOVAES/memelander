@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionType } = require("discord.js");
 const { clearTimeoutBot, playMeme } = require('../services/actionsService');
-const { repository } = require('../repository/memes.repository');
+const { memeRepository } = require('../repository/memes.repository');
 
 function body() {
   try {    
@@ -26,7 +26,7 @@ async function sendRowGroupFollowUp(pages, interaction) {
   for (let i = 0; i < pages; i++) {
     const rows = [];
     let action = new ActionRowBuilder();
-    const sounds = await repository.findAllPaginated(i + 1);
+    const sounds = await memeRepository.findAllPaginated(i + 1);
     
     if (!sounds || !sounds.length) return;
 
@@ -63,12 +63,12 @@ async function execute({ interaction }) {
   }
 
   await interaction.reply({ content: 'Carregando os memes...', ephemeral: true });
-  const total = await repository.count();
+  const total = await memeRepository.count();
   const totalPages = Math.ceil(total / 25);
   console.log('total totalPages', totalPages);
   await sendRowGroupFollowUp(totalPages, interaction);
 }
-
+0.2
 async function interaction({ interaction }) {
   if (interaction.type === InteractionType.MessageComponent) {
     const from = interaction?.customId.split('_')[0];
@@ -76,7 +76,7 @@ async function interaction({ interaction }) {
     if (interaction.isButton && from === 'MEME') {
       clearTimeoutBot();
 
-      const sound = await repository.findById(interaction.customId);
+      const sound = await memeRepository.findById(interaction.customId);
   
       if (!sound) {
         await interaction.reply({ content: 'meme nao encontrado!', ephemeral: true });
@@ -84,7 +84,7 @@ async function interaction({ interaction }) {
       }
   
       await interaction.reply(`${interaction.user.username} clicou em ${sound.name}!`);
-      await playMeme(sound.url, interaction);
+      await playMeme(sound.url, sound?.volume, interaction);
     }
   }
 }

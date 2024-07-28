@@ -32,7 +32,7 @@ const joinChannel = (voiceChannel) => {
   return connection;
 }
 
-const playMeme = async (url, interaction) => {
+const playMeme = async (url, volume, interaction) => {
   if (!interaction || !interaction?.member || !interaction?.member?.voice?.channel) return;
 
   const voiceChannel = interaction.member.voice.channel;
@@ -40,7 +40,7 @@ const playMeme = async (url, interaction) => {
 
   const player = createAudioPlayer();
   const song = createAudioResource(url, { inlineVolume: true });
-  song?.volume?.setVolume(0.4);
+  song?.volume?.setVolume(volume || 0.4);
 
   player.play(song);
   connection.subscribe(player);

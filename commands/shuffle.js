@@ -46,7 +46,7 @@ async function execute({ interaction, client }) {
 
         const memes = await memeRepository.random(randomness);
         const urls = memes.map(meme => meme.url)
-        await playMeme(urls, interaction, memes, client);
+        await playMeme(urls, interaction, memes);
     } catch (error) {
         console.log(error)
     }
@@ -56,7 +56,7 @@ async function interaction({ interaction, }) {
 
 }
 
-const playMeme = async (urls, interaction, memes, client) => {
+const playMeme = async (urls, interaction, memes) => {
     if (!interaction || !interaction?.member || !interaction?.member?.voice?.channel) return;
 
     const voiceChannel = interaction.member.voice.channel;

@@ -10,6 +10,7 @@ let memeState = {
   name: '',
   emoji: '',
   url: '',
+  volume: 0.4,
 }
 
 function resetMemeState() {
@@ -18,6 +19,7 @@ function resetMemeState() {
     name: '',
     emoji: '',
     url: '',
+    volume: 0.4,
   }
 }
 
@@ -100,6 +102,7 @@ async function interaction({ interaction }) {
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_instances_modal') {
     const regex = /[-\s]/g;
     await interaction.deferReply();
+    const volume = parseVolume(interaction.fields.getTextInputValue('volume_input'));
     const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input'));
 
     if (sound?.error) {
@@ -112,7 +115,7 @@ async function interaction({ interaction }) {
     const query = queryBuilder.or(
       { url: sound.url }, 
       { name: sound.name }, 
-      { memeId: customId }
+      { memeId: customId },
     );
 
     const exists = await memeRepository.findAll(query);
@@ -127,6 +130,7 @@ async function interaction({ interaction }) {
       memeId: customId,
       name: sound.name,
       url: sound.url,
+      volume,
     })
 
     const result = await addSound(memeState);
@@ -153,14 +157,27 @@ async function openInstantsFormModal(interaction) {
   const modal = new ModalBuilder()
     .setCustomId('add_instances_modal')
     .setTitle('Adicione um novo meme pelo My Instants');
+
   const urlInput = new TextInputBuilder()
     .setCustomId('url_input')
     .setLabel('URL')
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
+  const volumeInput = new TextInputBuilder()
+    .setCustomId('volume_input')
+    .setLabel('Volume (apenas numeros de escala 0 a 9)')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(false)
+    .setMinLength(1)
+    .setMaxLength(1)
+    .setValue('4');
+
   const urlRow = new ActionRowBuilder().addComponents(urlInput);
   modal.addComponents(urlRow);
+
+  const volumeRow = new ActionRowBuilder().addComponents(volumeInput);
+  modal.addComponents(volumeRow);
 
   await interaction.showModal(modal);
 }
@@ -177,6 +194,18 @@ async function openFileFormModal(interaction) {
 
   const urlRow = new ActionRowBuilder().addComponents(urlInput);
   modal.addComponents(urlRow);
+  
+  const volumeInput = new TextInputBuilder()
+    .setCustomId('volume_input_file')
+    .setLabel('Volume (apenas numeros de escala 0 a 9)')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(false)
+    .setMinLength(1)
+    .setMaxLength(1)
+    .setValue('4');
+
+  const volumeRow = new ActionRowBuilder().addComponents(volumeInput);
+  modal.addComponents(volumeRow);
 
   await interaction.showModal(modal);
 }
@@ -187,6 +216,8 @@ async function collectionUploadFile(interaction) {
 
   collector.on('collect', async message => {
     const name = interaction.fields.getTextInputValue('name_input')
+    const volume = interaction.fields.getTextInputValue('volume_input_file')
+
     const attachment = message.attachments.first();
 
     if (!name) {
@@ -227,6 +258,7 @@ async function collectionUploadFile(interaction) {
       memeId: customId,
       name,
       url: result.content,
+      volume: parseVolume(volume),
     });
 
     await addSound(memeState);
@@ -240,6 +272,11 @@ async function collectionUploadFile(interaction) {
         interaction.followUp('Voce nao anexou nenhum arquivo.');
       }
   });
+}
+
+function parseVolume(volume) {
+  const integer = Number(volume) + 1;
+  return integer / 10;
 }
 
 module.exports = {

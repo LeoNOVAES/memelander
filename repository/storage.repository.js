@@ -19,7 +19,7 @@ class StorageRepository {
     if (!response.ok) return { success: false, content: 'Error fetching file' };
 
     const buffer = await response.buffer();
-
+    console.log('Buffer length:', buffer.length);
     if (buffer.length > THREE_MB) {
       console.log('File too big');
       return { success: false, content: 'O arquivo deve ser menor que 3mb.' };

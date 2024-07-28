@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { connect, close } = require('./infra/mongodb/mongodb');
 const { serverRepository } = require('./repository/server.repository');
-
+ 
 require('dotenv/config');
 
 const CHANNEL_NAME = 'memelander';

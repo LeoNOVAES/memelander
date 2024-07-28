@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, InteractionType } = require("discord.js");
 const { clearTimeoutBot, playMeme } = require('../services/actionsService');
-const { repository } = require('../repository/memes.repository');
+const { memeRepository } = require('../repository/memes.repository');
+const queryBuilder = require('../infra/mongodb/mongo-query-builder');
 
 function body() {
   try {    
@@ -24,27 +25,27 @@ async function execute({ interaction }) {
   if (commandName === 'playmeme') {
     const meme = interaction.options.getString('meme');
     
-    const query = repository.or(
+    const query = queryBuilder.or(
       { url: meme },
       { name: meme }, 
       { memeId: meme }
     );
 
-    const sounds = await repository.findAll(query);
+    const sounds = await memeRepository.findAll(query);
 
     if (!sounds.length) {
       await interaction.reply({ content: 'meme nao encontrado!', ephemeral: true });
       return;
     }
 
-    await playMeme(sounds[0].url, interaction);
+    await playMeme(sounds[0].url, sounds[0]?.volume, interaction);
     clearTimeoutBot();
     await interaction.reply(`${interaction.user.username} invocou em  ${sounds[0]?.emoji || '😄'} ${sounds[0].name}!`);
   }
 }
 
 async function shuffleSounds() {
-  const sounds = await repository.findAll();
+  const sounds = await memeRepository.findAll();
   const shuffled = [...sounds];
 
   for (let i = shuffled.length - 1; i > 0; i--) {
