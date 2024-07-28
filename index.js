@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits, Collection, REST } = require('discord.js');
 const { Player } = require('discord-player');
 const { Routes } = require('discord-api-types/v9');
-const { disconnectBot } = require('./actions');
+const { disconnectBot } = require('./services/actionsService');
 const fs = require('fs');
 const path = require('path');
 const { connect, close } = require('./infra/mongodb');
