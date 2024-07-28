@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { clearTimeoutBot, joinChannel, startDisconnectTimer } = require('../actions');
+const { clearTimeoutBot, joinChannel, startDisconnectTimer } = require('../services/actionsService');
 const { repository } = require('../repository/memes.repository');
 const { createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 
