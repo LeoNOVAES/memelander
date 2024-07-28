@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const { clearTimeoutBot, joinChannel, startDisconnectTimer } = require('../services/actionsService');
-const { repository } = require('../repository/memes.repository');
+const { memeRepository } = require('../repository/memes.repository');
 const { createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 
 const TIMEOUT = 10_000
@@ -44,7 +44,7 @@ async function execute({ interaction, client }) {
             return;
         }
 
-        const memes = await repository.random(randomness);
+        const memes = await memeRepository.random(randomness);
         const urls = memes.map(meme => meme.url)
         await playMeme(urls, interaction, memes, client);
     } catch (error) {
