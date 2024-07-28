@@ -3,7 +3,7 @@ const { getVoiceConnection, joinVoiceChannel, createAudioPlayer, createAudioReso
 const TIMEOUT_DISCONNECT = 60 * 60 * 1000; // 1 hour in milliseconds
 let disconnectTimeout;
 
-const disconnectBot = (voiceChannel)  => {
+const disconnectBot = (voiceChannel) => {
   clearTimeoutBot();
   const connection = getVoiceConnection(voiceChannel.guild.id);
   if (connection) {
@@ -54,4 +54,5 @@ module.exports = {
   disconnectBot,
   clearTimeoutBot,
   playMeme,
+  joinChannel
 }
