@@ -4,7 +4,9 @@ const { Routes } = require('discord-api-types/v9');
 const { disconnectBot } = require('./services/actionsService');
 const fs = require('fs');
 const path = require('path');
-const { connect, close } = require('./infra/mongodb');
+const { connect, close } = require('./infra/mongodb/mongodb');
+const { serverRepository } = require('./repository/server.repository');
+
 require('dotenv/config');
 
 const CHANNEL_NAME = 'memelander';
@@ -69,6 +71,7 @@ async function registerCommands(client) {
 
     const guild = client.guilds.cache.get(guildID);
     const channel = guild.channels.cache.find(ch => ch.name === CHANNEL_NAME);
+    await serverRepository.upsert({ serverId: guildID, name: guild.name });
 
     if (channel) {
       CHANNEL_IDS.push(channel.id);

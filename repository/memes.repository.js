@@ -60,9 +60,4 @@ repository.count = async () => {
   }
 }
 
-repository.or = (...params) => {
-  return { $or: params };
-}
-
-
-module.exports = { repository };
+module.exports = { memeRepository: repository };

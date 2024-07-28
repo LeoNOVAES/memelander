@@ -1,8 +1,9 @@
 const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, InteractionType, ButtonStyle, ButtonBuilder } = require('discord.js');
 const { getInstantSound } = require('../repository/my-instants.repository');
-const { repository } = require('../repository/memes.repository');
+const { memeRepository } = require('../repository/memes.repository');
 const { googleStorage } = require('../repository/storage.repository');
 const { emojiRegex } = require('../utils/regex-util');
+const queryBuilder = require('../infra/mongodb/mongo-query-builder');
 
 let memeState = {
   memeId: '',
@@ -108,13 +109,13 @@ async function interaction({ interaction }) {
 
     const customId = 'MEME_' + sound.name.trim().replace(regex, '_').toUpperCase();
     
-    const query = repository.or(
+    const query = queryBuilder.or(
       { url: sound.url }, 
       { name: sound.name }, 
       { memeId: customId }
     );
 
-    const exists = await repository.findAll(query);
+    const exists = await memeRepository.findAll(query);
 
     if (exists.length) {
       console.log('Sound already exists');
@@ -143,7 +144,7 @@ async function interaction({ interaction }) {
 
 async function addSound(memeState) {
   console.log('Adding sound:', memeState.name, memeState.url, memeState.emoji, memeState.memeId);
-  await repository.store(memeState);
+  await memeRepository.store(memeState);
   resetMemeState();
   return { success: true , content: memeState.name };
 }
@@ -200,11 +201,11 @@ async function collectionUploadFile(interaction) {
       return;
     }
 
-    const query = repository.or(
+    const query = queryBuilder.or(
       { name },
     );
 
-    const exists = await repository.findAll(query);
+    const exists = await memeRepository.findAll(query);
 
     if (exists.length) {
       console.log('Meme already exists');
