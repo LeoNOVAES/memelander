@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, InteractionType } = require("discord.js");
-const { clearTimeoutBot, playMeme } = require('../actions');
+const { clearTimeoutBot, playMeme } = require('../services/actionsService');
 const { repository } = require('../repository/memes.repository');
 
 function body() {

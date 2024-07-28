@@ -1,4 +1,4 @@
-const browser = require('../browser');
+const browser = require('../infra/puppeteer');
 
 async function getInstantSound(url) {
   const regex = /^https:\/\/www\.myinstants\.com(\/.*)?$/;
