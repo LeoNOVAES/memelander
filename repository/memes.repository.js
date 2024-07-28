@@ -5,9 +5,9 @@ const repository = {};
 const userSchema = new mongoose.Schema({
   memeId: { type: String, required: true, unique: true },
   name: { type: String, required: true, unique: true },
-  emoji: { type: String, required: false } ,
+  emoji: { type: String, required: false },
   url: { type: String, required: true, unique: true }
-},{
+}, {
   timestamps: true
 });
 
@@ -42,13 +42,13 @@ repository.findAllPaginated = async (page = 1, limit = 25) => {
   try {
     const skip = (page - 1) * limit;
     const memes = await Meme.find()
-        .skip(skip)
-        .limit(limit) 
-        .exec();       
+      .skip(skip)
+      .limit(limit)
+      .exec();
 
     return memes;
   } catch (err) {
-      console.error('Error fetching paginated users:', err);
+    console.error('Error fetching paginated users:', err);
   }
 }
 
@@ -62,6 +62,10 @@ repository.count = async () => {
 
 repository.or = (...params) => {
   return { $or: params };
+}
+
+repository.random = async (size) => {
+  return await Meme.aggregate([{ $sample: { size } }]);
 }
 
 
