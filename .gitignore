@@ -2,6 +2,7 @@
 node_modules/
 docker-compose.yml
 google-service-account.json
+package-lock.json
 data
 # Dependency directories
 node_modules/
