@@ -1,0 +1,6 @@
+.env
+/node_modules
+docker-compose.yml
+google-service-account.json
+data
+dist
