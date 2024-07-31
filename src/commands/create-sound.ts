@@ -10,7 +10,7 @@ import {
   Interaction,
 } from 'discord.js';
 import { getInstantSound } from '../repository/my-instants.repository';
-import memeRepository, { MemeDocument } from '../repository/memes.repository';
+import * as memeRepository from '../repository/memes.repository';
 import { emojiRegex } from '../utils/regex-util'
 import * as queryBuilder from '../infra/mongodb/mongo-query-builder'
 import storageRepository from '../repository/storage.repository';
@@ -165,7 +165,7 @@ async function interaction(interaction: Interaction | any) {
 
 async function addSound(memeState: MemeState) {
   console.log('Adding sound:', memeState.name, memeState.url, memeState.emoji, memeState.memeId);
-  await memeRepository.store(memeState as MemeDocument);
+  await memeRepository.store(memeState as memeRepository.MemeDocument);
   resetMemeState();
   return { success: true, content: memeState.name };
 }

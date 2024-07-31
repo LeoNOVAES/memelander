@@ -9,7 +9,7 @@
     "start": "npm run build && node build/index.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "npm run lint -- --fix",
-    "build": "rimraf ./build && tsc",
+    "build": "rimraf ./build && npx tsc",
     "prepare": "husky install"
   },
   "keywords": [],
