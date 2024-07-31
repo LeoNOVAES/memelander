@@ -2,6 +2,7 @@ const { SlashCommandBuilder, InteractionType } = require("discord.js");
 const { clearTimeoutBot, playMeme } = require('../services/actionsService');
 const { memeRepository } = require('../repository/memes.repository');
 const queryBuilder = require('../infra/mongodb/mongo-query-builder');
+const { serverRepository }= require("../repository/server.repository");
 
 function body() {
   try {    
@@ -21,15 +22,19 @@ function body() {
 
 async function execute({ interaction }) {
   const { commandName } = interaction;
+  const server = await serverRepository.findById(interaction.guildId);
 
   if (commandName === 'playmeme') {
     const meme = interaction.options.getString('meme');
     
-    const query = queryBuilder.or(
-      { url: meme },
-      { name: meme }, 
-      { memeId: meme }
-    );
+    const query = { 
+      ...queryBuilder.or(
+        { url: meme },
+        { name: meme }, 
+        { memeId: meme }
+      ),
+      servers: server._id,
+    };    
 
     const sounds = await memeRepository.findAll(query);
 
@@ -44,8 +49,12 @@ async function execute({ interaction }) {
   }
 }
 
-async function shuffleSounds() {
-  const sounds = await memeRepository.findAll();
+async function shuffleSounds(serverId) {
+  const server = await serverRepository.findById(serverId);
+  const query = {
+    servers: server._id,
+  }
+  const sounds = await memeRepository.findAll(query);
   const shuffled = [...sounds];
 
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -61,7 +70,7 @@ async function interaction({ interaction }) {
 
   if (interaction.type === InteractionType.ApplicationCommandAutocomplete && commandName === 'playmeme') {
     const focusedValue = interaction.options.getFocused();
-    const shuffledSounds = await shuffleSounds();
+    const shuffledSounds = await shuffleSounds(interaction.guildId);
     const filtered = shuffledSounds.filter(sound => sound.name.toLowerCase().includes(focusedValue.toLowerCase()));
     const sliced = filtered.slice(0, 24);
 

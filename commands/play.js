@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionType } = require("discord.js");
 const { clearTimeoutBot, playMeme } = require('../services/actionsService');
 const { memeRepository } = require('../repository/memes.repository');
+const { serverRepository } = require('../repository/server.repository');
 
 function body() {
   try {    
@@ -14,6 +15,8 @@ function body() {
 
 async function sendRowGroupFollowUp(pages, interaction) {
   console.log('creating group row');
+  const server = await serverRepository.findById(interaction.guildId);
+
   const colors = [
     { color: ButtonStyle.Primary },
     { color: ButtonStyle.Secondary },
@@ -26,7 +29,12 @@ async function sendRowGroupFollowUp(pages, interaction) {
   for (let i = 0; i < pages; i++) {
     const rows = [];
     let action = new ActionRowBuilder();
-    const sounds = await memeRepository.findAllPaginated(i + 1);
+    
+    const query = { 
+      servers: server._id,
+    };
+
+    const sounds = await memeRepository.findAllPaginated(query, i + 1);
     
     if (!sounds || !sounds.length) return;
 
@@ -55,6 +63,7 @@ async function sendRowGroupFollowUp(pages, interaction) {
 }
 
 async function execute({ interaction }) {
+  const server = await serverRepository.findById(interaction.guildId);
   const { voice } = interaction.member;
 
   if (!voice.channel) {
@@ -63,16 +72,25 @@ async function execute({ interaction }) {
   }
 
   await interaction.reply({ content: 'Carregando os memes...', ephemeral: true });
-  const total = await memeRepository.count();
+  const query = {
+    servers: server._id,
+  }
+  const total = await memeRepository.count(query);
+
+  if (total === 0) {
+    await interaction.followUp({ content: 'Nenhum meme cadastrado! por favor use o comando /add e depois o botao adicionar memes!', ephemeral: true });
+    return;
+  }
+
   const totalPages = Math.ceil(total / 25);
   console.log('total totalPages', totalPages);
   await sendRowGroupFollowUp(totalPages, interaction);
 }
-0.2
+
 async function interaction({ interaction }) {
   if (interaction.type === InteractionType.MessageComponent) {
     const from = interaction?.customId.split('_')[0];
-  
+
     if (interaction.isButton && from === 'MEME') {
       clearTimeoutBot();
 
@@ -83,7 +101,7 @@ async function interaction({ interaction }) {
         return;
       }
   
-      await interaction.reply(`${interaction.user.username} clicou em ${sound.name}!`);
+      await interaction.reply(`${interaction.user.username} clicou em ${sound.emoji} ${sound.name}!`);
       await playMeme(sound.url, sound?.volume, interaction);
     }
   }

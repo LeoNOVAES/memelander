@@ -1,15 +1,18 @@
 const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, InteractionType, ButtonStyle, ButtonBuilder } = require('discord.js');
 const { getInstantSound } = require('../repository/my-instants.repository');
 const { memeRepository } = require('../repository/memes.repository');
+const { serverRepository } = require('../repository/server.repository');
 const { googleStorage } = require('../repository/storage.repository');
 const { emojiRegex } = require('../utils/regex-util');
 const queryBuilder = require('../infra/mongodb/mongo-query-builder');
+const MemeButtonsComponent = require('./shared-components/meme-buttons');
 
 let memeState = {
   memeId: '',
   name: '',
   emoji: '',
   url: '',
+  creator: '',
   volume: 0.4,
 }
 
@@ -19,6 +22,7 @@ function resetMemeState() {
     name: '',
     emoji: '',
     url: '',
+    creator: '',
     volume: 0.4,
   }
 }
@@ -54,6 +58,7 @@ async function execute({ interaction }) {
     setMemeState({
       ...memeState,
       emoji: interaction.options.getString('emoji') || '🤣',
+      creator: interaction.user.id,
     });
 
     action.addComponents(new ButtonBuilder()
@@ -68,6 +73,12 @@ async function execute({ interaction }) {
       .setLabel('Anexar MP3')
       .setStyle(ButtonStyle.Success));
 
+    action.addComponents(new ButtonBuilder()
+      .setCustomId('existing')
+      .setEmoji('🖋️')
+      .setLabel('Escolher um meme existente')
+      .setStyle(ButtonStyle.Danger));
+
     await interaction.reply(
       { 
         content: 'Escolha alguma dessas formas de criacao de audio: ', 
@@ -78,6 +89,8 @@ async function execute({ interaction }) {
 }
 
 async function interaction({ interaction }) {
+  const server = await serverRepository.findById(interaction.guild.id);
+
   if (interaction.isButton && interaction.customId === 'myinstants' && interaction?.message?.interaction?.commandName === 'add') {
     await openInstantsFormModal(interaction);
     return;
@@ -86,6 +99,17 @@ async function interaction({ interaction }) {
   if (interaction.isButton && interaction.customId === 'file' && interaction?.message?.interaction?.commandName === 'add') {
     console.log('File button clicked');
     openFileFormModal(interaction);
+    return;
+  };
+
+  if (interaction.isButton && interaction.customId === 'existing' && interaction?.message?.interaction?.commandName === 'add') {
+    console.log('existing button clicked');
+    const total = await memeRepository.count({}); 
+    const totalPages = Math.ceil(total / 25);
+
+    await interaction.reply({ content: 'carregando memes...', ephemeral: true });
+    await MemeButtonsComponent(totalPages, interaction);
+    return;
   };
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_file_modal') {
@@ -104,6 +128,12 @@ async function interaction({ interaction }) {
     await interaction.deferReply();
     const volume = parseVolume(interaction.fields.getTextInputValue('volume_input'));
     const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input'));
+    const server = await serverRepository.findById(interaction.guild.id);
+
+    if (!server) {
+      await interaction.editReply({ content: 'Server not found', ephemeral: true });
+      return;
+    }
 
     if (sound?.error) {
       await interaction.editReply({ content: sound.error, ephemeral: true });
@@ -122,7 +152,8 @@ async function interaction({ interaction }) {
 
     if (exists.length) {
       console.log('Sound already exists');
-      await interaction.editReply({ content: `${sound.name} ja existe tente outro meme!`, ephemeral: true });
+      await memeRepository.addServerToMeme(customId, server._id);
+      await interaction.editReply({ content: `${sound.name} adicionado ao servidor!`, ephemeral: true });
       return;
     }
 
@@ -130,11 +161,14 @@ async function interaction({ interaction }) {
       memeId: customId,
       name: sound.name,
       url: sound.url,
+      creator: interaction.user.id,
       volume,
     })
 
     const result = await addSound(memeState);
     console.log('[INFO] added sound from My Instants - ', result);
+
+    await memeRepository.addServerToMeme(customId, server._id);
 
     if (!result.success) {
       await interaction.editReply({ content: result.content, ephemeral: true });
@@ -144,13 +178,25 @@ async function interaction({ interaction }) {
     await interaction.editReply({ content: `${interaction.user.username} adicionou o meme ${result.content}`  });
     return;
   }
+
+  if (interaction.type === InteractionType.MessageComponent) {
+    const customIdSplitted = interaction.customId.split('-');
+    const from = customIdSplitted[0] || '';
+    const customIdFormatted = customIdSplitted[1];
+
+    if (!interaction.isButton || from !== 'ADD') return;
+
+    const { name } = await addExistsMeme(server, customIdFormatted);
+    await interaction.reply({ content: `${interaction.user.username} adicionou o meme ${name} ao servidor!`  });
+    return;
+  }
 }
 
 async function addSound(memeState) {
   console.log('Adding sound:', memeState.name, memeState.url, memeState.emoji, memeState.memeId);
-  await memeRepository.store(memeState);
+  const { _id } = await memeRepository.store(memeState);
   resetMemeState();
-  return { success: true , content: memeState.name };
+  return { success: true , content: memeState.name, soundId: _id };
 }
 
 async function openInstantsFormModal(interaction) {
@@ -213,6 +259,12 @@ async function openFileFormModal(interaction) {
 async function collectionUploadFile(interaction) {
   const filter = m => m.author.id === interaction.user.id && m.attachments.size > 0;
   const collector = interaction.channel.createMessageCollector({ filter, max: 1, time: 60000 });
+  const server = await serverRepository.findById(interaction.guild.id);
+
+  if (!server) {
+    message.reply({ content: 'Server not found', ephemeral: true });
+    return;
+  }
 
   collector.on('collect', async message => {
     const name = interaction.fields.getTextInputValue('name_input')
@@ -240,7 +292,7 @@ async function collectionUploadFile(interaction) {
 
     if (exists.length) {
       console.log('Meme already exists');
-      await message.reply({ content: `${name} ja existe tente outro meme!`, ephemeral: true });
+      await interaction.editReply({ content: `${sound.name} adicionado ao servidor!`, ephemeral: true });
       await message.delete();
       return;
     }
@@ -258,10 +310,17 @@ async function collectionUploadFile(interaction) {
       memeId: customId,
       name,
       url: result.content,
+      creator: interaction.user.id,
       volume: parseVolume(volume),
     });
 
     await addSound(memeState);
+    
+    await memeRepository.addServerToMeme(
+      customId,
+      server._id,
+    );
+
     console.log('MP3 file attached');
     await message.reply({ content: `${interaction.user.username} adicionou o meme ${name}`});
     await message.delete();
@@ -272,6 +331,13 @@ async function collectionUploadFile(interaction) {
         interaction.followUp('Voce nao anexou nenhum arquivo.');
       }
   });
+}
+
+async function addExistsMeme(server, customId) {
+  console.log('Adding existing meme');
+  const sound = await memeRepository.findById(customId);
+  await memeRepository.addServerToMeme(customId, server._id);
+  return sound;
 }
 
 function parseVolume(volume) {
