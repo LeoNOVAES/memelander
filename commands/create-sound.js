@@ -112,7 +112,7 @@ async function interaction({ interaction }) {
     const totalPages = Math.ceil(total / 25);
 
     await interaction.reply({ content: 'carregando memes...', ephemeral: true });
-    await MemeButtonsComponent(totalPages, interaction, query);
+    await MemeButtonsComponent(totalPages, interaction, query, 'ADD-');
     return;
   };
 

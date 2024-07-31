@@ -1,7 +1,7 @@
 const { ButtonStyle, ActionRowBuilder, ButtonBuilder } = require("discord.js");
 const { memeRepository } = require("../../repository/memes.repository");
 
-const render = async (pages, interaction, query) => {
+const render = async (pages, interaction, query, prefix = '') => {
   console.log('creating group row');
   
   const colors = [
@@ -30,9 +30,11 @@ const render = async (pages, interaction, query) => {
         action = new ActionRowBuilder();
         actionsLength = action.components.length;
       }
-  
+
+      const customId = `${prefix}${sounds[j].memeId}`
+
       action.addComponents(new ButtonBuilder()
-          .setCustomId(`ADD-${sounds[j].memeId}`)
+          .setCustomId(customId)
           .setLabel(`${emoji} ${sounds[j].name}`)
           .setStyle(colors[actionsLength]?.color));
 
