@@ -1,9 +1,8 @@
 const { ButtonStyle, ActionRowBuilder, ButtonBuilder } = require("discord.js");
 const { memeRepository } = require("../../repository/memes.repository");
 
-const render = async (pages, interaction, server) => {
+const render = async (pages, interaction, query) => {
   console.log('creating group row');
-  let query = {};
   
   const colors = [
     { color: ButtonStyle.Primary },
@@ -18,12 +17,6 @@ const render = async (pages, interaction, server) => {
     const rows = [];
     let action = new ActionRowBuilder();
     
-    if (server) {
-      query = { 
-        servers: server._id,
-      };
-    }
-
     const sounds = await memeRepository.findAllPaginated(query, i + 1);
     
     if (!sounds || !sounds.length) return;

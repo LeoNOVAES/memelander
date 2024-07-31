@@ -104,11 +104,15 @@ async function interaction({ interaction }) {
 
   if (interaction.isButton && interaction.customId === 'existing' && interaction?.message?.interaction?.commandName === 'add') {
     console.log('existing button clicked');
-    const total = await memeRepository.count({}); 
+    const query = {
+      servers: queryBuilder.notIn(server._id),
+    };
+
+    const total = await memeRepository.count(query); 
     const totalPages = Math.ceil(total / 25);
 
     await interaction.reply({ content: 'carregando memes...', ephemeral: true });
-    await MemeButtonsComponent(totalPages, interaction);
+    await MemeButtonsComponent(totalPages, interaction, query);
     return;
   };
 
