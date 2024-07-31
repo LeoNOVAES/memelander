@@ -4,7 +4,7 @@ const repository = {};
 
 const serverSchema = new mongoose.Schema({
   serverId: { type: String, required: true, unique: true },
-  name: { type: String, required: true, unique: true }
+  name: { type: String, required: true, unique: true },
 },{
   timestamps: true
 });
@@ -17,6 +17,14 @@ repository.store = async (server) => {
     await newServer.save();
   } catch (error) {
     console.error('Error storing server:', error);
+  }
+}
+
+repository.updateOne = async (serverId, server) => {
+  try {
+    await Server.updateOne({ serverId }, server);
+  } catch (error) {
+    console.error('Error updating server:', error);
   }
 }
 

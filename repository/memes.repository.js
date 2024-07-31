@@ -7,7 +7,14 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
   emoji: { type: String, required: false },
   url: { type: String, required: true, unique: true },
-  volume: { type: Number, default: 0.4 }
+  volume: { type: Number, default: 0.4 },
+  creator: { type: String, required: false },
+  servers: { 
+    type: [mongoose.Schema.Types.ObjectId], 
+    required: false, 
+    ref: 'Server',
+    default: []
+  },
 }, {
   timestamps: true
 });
@@ -17,7 +24,7 @@ const Meme = mongoose.model('Meme', userSchema);
 repository.store = async (meme) => {
   try {
     const newMeme = new Meme(meme);
-    await newMeme.save();
+    return await newMeme.save();
   } catch (error) {
     console.error('Error storing meme:', error);
   }
@@ -47,12 +54,13 @@ repository.findById = async (id) => {
   }
 }
 
-repository.findAllPaginated = async (page = 1, limit = 25) => {
+repository.findAllPaginated = async (query, page = 1, limit = 25) => {
   try {
     const skip = (page - 1) * limit;
-    const memes = await Meme.find()
+    const memes = await Meme.find(query)
       .skip(skip)
       .limit(limit)
+      .populate('servers')
       .exec();
 
     return memes;
@@ -61,11 +69,21 @@ repository.findAllPaginated = async (page = 1, limit = 25) => {
   }
 }
 
-repository.count = async () => {
+repository.count = async (query) => {
   try {
-    return await Meme.countDocuments();
+    return await Meme.countDocuments(query);
   } catch (error) {
     console.error('Error counting memes:', error);
+  }
+}
+
+repository.addServerToMeme = async (memeId, serverId) => {
+  try {
+    await Meme.findOneAndUpdate({ memeId }, {
+      $addToSet: { servers: serverId }
+    });
+  } catch (error) {
+    console.error('Error to add meme into server:', error);
   }
 }
 

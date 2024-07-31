@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, InteractionType } = require("discord.js");
-const { clearTimeoutBot, playMeme } = require('../services/actionsService');
 const { memeRepository } = require('../repository/memes.repository');
 const queryBuilder = require('../infra/mongodb/mongo-query-builder');
 const { serverRepository }= require("../repository/server.repository");
@@ -7,11 +6,11 @@ const { serverRepository }= require("../repository/server.repository");
 function body() {
   try {    
     return new SlashCommandBuilder()
-      .setName('playmeme')
-      .setDescription('mostrando opcoes de memes!')
+      .setName('addmeme')
+      .setDescription('mostrando opcoes de memes para adicionar no seu servidor!')
       .addStringOption(option => 
         option.setName('meme')
-          .setDescription('meme a ser tocado')
+          .setDescription('meme a ser adicionado!')
           .setAutocomplete(true)
           .setRequired(true)
       )
@@ -24,36 +23,30 @@ async function execute({ interaction }) {
   const { commandName } = interaction;
   const server = await serverRepository.findById(interaction.guildId);
 
-  if (commandName === 'playmeme') {
+  if (commandName === 'addmeme') {
     const meme = interaction.options.getString('meme');
-    
     const query = { 
-      ...queryBuilder.or(
-        { url: meme },
-        { name: meme }, 
-        { memeId: meme }
-      ),
-      servers: server._id,
+      memeId: meme,
     };    
 
     const sounds = await memeRepository.findAll(query);
-
     if (!sounds.length) {
       await interaction.reply({ content: 'meme nao encontrado!', ephemeral: true });
       return;
     }
 
-    await playMeme(sounds[0].url, sounds[0]?.volume, interaction);
-    clearTimeoutBot();
-    await interaction.reply(`${interaction.user.username} invocou em  ${sounds[0]?.emoji || '😄'} ${sounds[0].name}!`);
+    await memeRepository.addServerToMeme(sounds[0]?.memeId, server._id);
+    await interaction.reply(`${interaction.user.username} adicionou  ${sounds[0]?.emoji || '😄'} ${sounds[0].name} no servidor!`);
   }
 }
 
 async function shuffleSounds(serverId) {
   const server = await serverRepository.findById(serverId);
+
   const query = {
-    servers: server._id,
-  }
+    servers: queryBuilder.notIn(server._id),
+  };
+
   const sounds = await memeRepository.findAll(query);
   const shuffled = [...sounds];
 
@@ -68,7 +61,7 @@ async function shuffleSounds(serverId) {
 async function interaction({ interaction }) {
   const { commandName } = interaction;
 
-  if (interaction.type === InteractionType.ApplicationCommandAutocomplete && commandName === 'playmeme') {
+  if (interaction.type === InteractionType.ApplicationCommandAutocomplete && commandName === 'addmeme') {
     const focusedValue = interaction.options.getFocused();
     const shuffledSounds = await shuffleSounds(interaction.guildId);
     const filtered = shuffledSounds.filter(sound => sound.name.toLowerCase().includes(focusedValue.toLowerCase()));
