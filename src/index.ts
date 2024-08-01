@@ -11,9 +11,9 @@ import { Player } from 'discord-player'
 import { Routes } from 'discord-api-types/v9'
 import path from 'path'
 import fs, { readFileSync } from 'fs'
-// const { disconnectBot } = require('./services/actionsService');
-import { connect, close } from './infra/mongodb/mongodb'
-import { upsert } from './repository/server.repository'
+import { disconnectBot } from './v2/services/actionsService';
+import { connect, close } from './v2/infra/mongodb/mongodb'
+import { upsert } from './v2/repository/server.repository'
 require('dotenv/config');
 
 const CHANNEL_NAME = 'memelander';
@@ -60,7 +60,7 @@ function createClient() {
 
     client.commands = new Collection()
 
-    const commandsPath = path.join(__dirname, 'commands');
+    const commandsPath = path.join(__dirname, 'v2/commands');
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
 
     for (const file of commandFiles) {
@@ -184,7 +184,7 @@ client.on('voiceStateUpdate', (oldState: VoiceState, newState: VoiceState) => {
     const voiceChannel = oldState.channel || newState.channel;
 
     if (voiceChannel && voiceChannel.members.size === 1 && voiceChannel.members.has(client.user.id)) {
-        // disconnectBot(voiceChannel);
+        disconnectBot(voiceChannel);
     }
 });
 
