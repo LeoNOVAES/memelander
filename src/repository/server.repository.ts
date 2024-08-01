@@ -24,6 +24,14 @@ export const store = async (server: ServerDocument): Promise<void> => {
   }
 }
 
+export const updateOne = async (serverId: any, server: any) => {
+  try {
+    await Server.updateOne({ serverId }, server);
+  } catch (error) {
+    console.error('Error updating server:', error);
+  }
+}
+
 export const upsert = async (server: any): Promise<void> => {
   try {
     await Server.updateOne({ serverId: server.serverId }, server, { upsert: true });
@@ -41,7 +49,7 @@ export const findAll = async (query: Record<string, unknown>): Promise<ServerDoc
   }
 }
 
-export const findById = async (id: string): Promise<ServerDocument | null> => {
+export const findById = async (id: string): Promise<any> => {
   try {
     return await Server.findOne({ serverId: id });
   } catch (error) {

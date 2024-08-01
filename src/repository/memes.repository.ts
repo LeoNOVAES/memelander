@@ -1,12 +1,15 @@
 
 import mongoose, { Document } from 'mongoose';
+import { relative } from 'path';
 
 export interface MemeDocument extends Document {
   memeId: string;
   name: string;
   emoji?: string;
   url: string;
+  creator: string
   volume: number;
+  servers?: any
 }
 
 const userSchema = new mongoose.Schema<MemeDocument>({
@@ -15,22 +18,29 @@ const userSchema = new mongoose.Schema<MemeDocument>({
   emoji: { type: String },
   url: { type: String, required: true, unique: true },
   volume: { type: Number, default: 0.4 },
+  creator: { type: String, required: false },
+  servers: {
+    type: [mongoose.Schema.Types.ObjectId],
+    required: false,
+    ref: 'Server',
+    default: []
+  },
 }, {
   timestamps: true,
 });
 
 const Meme = mongoose.model<MemeDocument>('Meme', userSchema);
 
-export const store = async (meme: MemeDocument): Promise<void> => {
+export const store = async (meme: any): Promise<any> => {
   try {
     const newMeme = new Meme(meme);
-    await newMeme.save();
+    return await newMeme.save();
   } catch (error) {
     console.error('Error storing meme:', error);
   }
 }
 
-export const upsert = async (meme: MemeDocument): Promise<void> => {
+export const upsert = async (meme: any): Promise<any> => {
   try {
     await Meme.updateOne({ memeId: meme.memeId }, meme, { upsert: true });
   } catch (error) {
@@ -38,7 +48,7 @@ export const upsert = async (meme: MemeDocument): Promise<void> => {
   }
 }
 
-export const findAll = async (query: Record<string, unknown>): Promise<MemeDocument[]> => {
+export const findAll = async (query: Record<string, unknown>): Promise<any> => {
   try {
     return await Meme.find(query);
   } catch (error) {
@@ -47,7 +57,7 @@ export const findAll = async (query: Record<string, unknown>): Promise<MemeDocum
   }
 }
 
-export const findById = async (id: string): Promise<MemeDocument | null> => {
+export const findById = async (id: string): Promise<any | null> => {
   try {
     return await Meme.findOne({ memeId: id });
   } catch (error) {
@@ -56,12 +66,13 @@ export const findById = async (id: string): Promise<MemeDocument | null> => {
   }
 }
 
-export const findAllPaginated = async (page = 1, limit = 25): Promise<MemeDocument[]> => {
+export const findAllPaginated = async (query: any, page = 1, limit = 25): Promise<any[]> => {
   try {
     const skip = (page - 1) * limit;
-    const memes = await Meme.find()
+    const memes = await Meme.find(query)
       .skip(skip)
       .limit(limit)
+      .populate('servers')
       .exec();
 
     return memes;
@@ -71,15 +82,25 @@ export const findAllPaginated = async (page = 1, limit = 25): Promise<MemeDocume
   }
 }
 
-export const count = async (): Promise<number> => {
+export const count = async (query: any): Promise<number> => {
   try {
-    return await Meme.countDocuments();
+    return await Meme.countDocuments(query);
   } catch (error) {
     console.error('Error counting memes:', error);
     return 0;
   }
 }
 
-export const random = async (size: number): Promise<MemeDocument[]> => {
+export const addServerToMeme = async (memeId: any, serverId: any) => {
+  try {
+    await Meme.findOneAndUpdate({ memeId }, {
+      $addToSet: { servers: serverId }
+    });
+  } catch (error) {
+    console.error('Error to add meme into server:', error);
+  }
+}
+export const random = async (size: number): Promise<any[]> => {
   return await Meme.aggregate([{ $sample: { size } }]);
 }
+

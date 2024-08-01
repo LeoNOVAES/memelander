@@ -1,6 +1,6 @@
 import puppeteer, { Browser, Page } from 'puppeteer'
 
-let browser: Browser;
+export let browser: Browser;
 let page: Page;
 
 export const setupBrowser = async () => {

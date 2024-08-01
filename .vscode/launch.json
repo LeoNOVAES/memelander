@@ -8,8 +8,11 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\dist\\index.js",
-            "preLaunchTask": "tsc: watch - tsconfig.json"
+            "runtimeArgs": [
+                "-r",
+                "ts-node/register"
+            ],
+            "program": "${workspaceFolder}\\src\\index.ts",
         }
     ]
 }

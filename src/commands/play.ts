@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { clearTimeoutBot, playMeme } from '../services/actionsService';
 import * as memeRepository from '../repository/memes.repository';
+import * as serverRepository from '../repository/server.repository';
 
 export function body(): SlashCommandBuilder {
     try {
@@ -69,6 +70,7 @@ export async function sendRowGroupFollowUp(pages: number, interaction: any): Pro
 
 export async function execute(interaction: any): Promise<void> {
     const { voice } = interaction.member;
+    const server = await serverRepository.findById(interaction.guildId);
 
     if (!voice.channel) {
         interaction.reply({
@@ -82,7 +84,10 @@ export async function execute(interaction: any): Promise<void> {
         content: 'Carregando os memes...',
         ephemeral: true,
     });
-    const total = await memeRepository.count();
+    const query = {
+        servers: server._id || interaction.guildId,
+    }
+    const total = await memeRepository.count(query);
     const totalPages = Math.ceil(total / 25);
     console.log('total totalPages', totalPages);
     await sendRowGroupFollowUp(totalPages, interaction);

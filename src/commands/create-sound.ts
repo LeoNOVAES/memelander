@@ -14,12 +14,14 @@ import * as memeRepository from '../repository/memes.repository';
 import { emojiRegex } from '../utils/regex-util'
 import * as queryBuilder from '../infra/mongodb/mongo-query-builder'
 import storageRepository from '../repository/storage.repository';
-
+import * as serverRepository from '../repository/server.repository';
+import { render as MemeButtonsComponent } from './shared-components/meme-buttons'
 interface MemeState {
   memeId: String
   name: String
   emoji?: String
   url: String
+  creator: String
   volume: Number,
 }
 let memeState: MemeState = {
@@ -27,6 +29,7 @@ let memeState: MemeState = {
   name: '',
   emoji: '',
   url: '',
+  creator: '',
   volume: 0.4,
 }
 
@@ -36,6 +39,7 @@ function resetMemeState() {
     name: '',
     emoji: '',
     url: '',
+    creator: '',
     volume: 0.4,
   }
 }
@@ -47,7 +51,7 @@ function setMemeState(state: MemeState) {
   }
 }
 
-function body() {
+export function body() {
   return new SlashCommandBuilder()
     .setName('add')
     .setDescription('add an meme')
@@ -58,7 +62,7 @@ function body() {
     )
 }
 
-async function execute(interaction: Interaction | any) {
+export async function execute(interaction: Interaction | any) {
   if (interaction.isCommand() && interaction.commandName === 'add') {
     const action = new ActionRowBuilder();
     resetMemeState();
@@ -71,6 +75,7 @@ async function execute(interaction: Interaction | any) {
     setMemeState({
       ...memeState,
       emoji: interaction.options.getString('emoji') || '🤣',
+      creator: interaction.user.id
     });
 
     action.addComponents(new ButtonBuilder()
@@ -85,6 +90,12 @@ async function execute(interaction: Interaction | any) {
       .setLabel('Anexar MP3')
       .setStyle(ButtonStyle.Success));
 
+    action.addComponents(new ButtonBuilder()
+      .setCustomId('existing')
+      .setEmoji('🖋️')
+      .setLabel('Escolher um meme existente')
+      .setStyle(ButtonStyle.Danger));
+
     await interaction.reply(
       {
         content: 'Escolha alguma dessas formas de criacao de audio: ',
@@ -94,7 +105,8 @@ async function execute(interaction: Interaction | any) {
   }
 }
 
-async function interaction(interaction: Interaction | any) {
+export async function interaction(interaction: Interaction | any) {
+  const server = await serverRepository.findById(interaction.guild.id);
   if (interaction.isButton && interaction.customId === 'myinstants' && interaction?.message?.interaction?.commandName === 'add') {
     await openInstantsFormModal(interaction);
     return;
@@ -103,6 +115,19 @@ async function interaction(interaction: Interaction | any) {
   if (interaction.isButton && interaction.customId === 'file' && interaction?.message?.interaction?.commandName === 'add') {
     console.log('File button clicked');
     openFileFormModal(interaction);
+  };
+
+  if (interaction.isButton && interaction.customId === 'existing' && interaction?.message?.interaction?.commandName === 'add') {
+    console.log('existing button clicked');
+    const query = {
+      servers: queryBuilder.notIn(server._id),
+    };
+    const total = await memeRepository.count(query);
+    const totalPages = Math.ceil(total / 25);
+
+    await interaction.reply({ content: 'carregando memes...', ephemeral: true });
+    await MemeButtonsComponent(totalPages, interaction, query);
+    return;
   };
 
   if (interaction.type === InteractionType.ModalSubmit && interaction.customId === 'add_file_modal') {
@@ -121,7 +146,12 @@ async function interaction(interaction: Interaction | any) {
     await interaction.deferReply();
     const volume = parseVolume(interaction.fields.getTextInputValue('volume_input'));
     const sound = await getInstantSound(interaction.fields.getTextInputValue('url_input')) as any;
+    const server = await serverRepository.findById(interaction.guild.id);
 
+    if (!server) {
+      await interaction.editReply({ content: 'Server not found', ephemeral: true });
+      return;
+    }
     if (sound?.error) {
       await interaction.editReply({ content: sound.error, ephemeral: true });
       return;
@@ -139,7 +169,8 @@ async function interaction(interaction: Interaction | any) {
 
     if (exists.length) {
       console.log('Sound already exists');
-      await interaction.editReply({ content: `${sound.name} ja existe tente outro meme!`, ephemeral: true });
+      await memeRepository.addServerToMeme(customId, server._id);
+      await interaction.editReply({ content: `${sound.name} adicionado ao servidor!`, ephemeral: true });
       return;
     }
 
@@ -147,27 +178,39 @@ async function interaction(interaction: Interaction | any) {
       memeId: customId,
       name: sound.name,
       url: sound.url,
+      creator: interaction.user.id,
       volume
     })
 
     const result = await addSound(memeState);
     console.log('[INFO] added sound from My Instants - ', result);
-
+    await memeRepository.addServerToMeme(customId, server._id);
     if (!result.success) {
       await interaction.editReply({ content: result.content, ephemeral: true });
       return;
     }
 
     await interaction.editReply({ content: `${interaction.user.username} adicionou o meme ${result.content}` });
+
+    if (interaction.type === InteractionType.MessageComponent) {
+      const customIdSplitted = interaction.customId.split('-');
+      const from = customIdSplitted[0] || '';
+      const customIdFormatted = customIdSplitted[1];
+
+      if (!interaction.isButton || from !== 'ADD') return;
+
+      const { name } = await addExistsMeme(server, customIdFormatted);
+      await interaction.reply({ content: `${interaction.user.username} adicionou o meme ${name} ao servidor!` });
+      return;
+    }
     return;
   }
 }
 
 async function addSound(memeState: MemeState) {
-  console.log('Adding sound:', memeState.name, memeState.url, memeState.emoji, memeState.memeId);
-  await memeRepository.store(memeState as memeRepository.MemeDocument);
+  const meme = await memeRepository.store(memeState);
   resetMemeState();
-  return { success: true, content: memeState.name };
+  return { success: true, content: memeState.name, soundId: meme.id };
 }
 
 async function openInstantsFormModal(interaction: Interaction | any) {
@@ -230,6 +273,7 @@ async function openFileFormModal(interaction: Interaction | any) {
 async function collectionUploadFile(interaction: any) {
   const filter = (m: any) => m.author.id === interaction.user.id && m.attachments.size > 0;
   const collector = interaction.channel.createMessageCollector({ filter, max: 1, time: 60000 });
+  const server = await serverRepository.findById(interaction.guild.id);
 
   collector.on('collect', async (message: any) => {
     const name = interaction.fields.getTextInputValue('name_input')
@@ -257,7 +301,7 @@ async function collectionUploadFile(interaction: any) {
 
     if (exists.length) {
       console.log('Meme already exists');
-      await message.reply({ content: `${name} ja existe tente outro meme!`, ephemeral: true });
+      await interaction.editReply({ content: `${exists[0].name} adicionado ao servidor!`, ephemeral: true });
       await message.delete();
       return;
     }
@@ -276,6 +320,7 @@ async function collectionUploadFile(interaction: any) {
       name,
       url: result.content,
       volume: parseVolume(volume),
+      creator: interaction.user.id,
     });
 
     await addSound(memeState);
@@ -290,14 +335,14 @@ async function collectionUploadFile(interaction: any) {
     }
   });
 }
+async function addExistsMeme(server: any, customId: any) {
+  console.log('Adding existing meme');
+  const sound = await memeRepository.findById(customId);
+  await memeRepository.addServerToMeme(customId, server._id);
+  return sound;
+}
 
 function parseVolume(volume: any) {
   const integer = Number(volume) + 1;
   return integer / 10;
-}
-
-module.exports = {
-  body,
-  execute,
-  interaction,
 }

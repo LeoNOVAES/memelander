@@ -6,10 +6,10 @@
   "scripts": {
     "test": "jest --passWithNoTests --no-cache --runInBand",
     "start:dev": "ts-node src/index.ts",
-    "start": "npm run build && node build/index.js",
+    "start": "npm run build && node dist/index.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "npm run lint -- --fix",
-    "build": "rimraf ./build && npx tsc",
+    "build": "rimraf ./dist",
     "prepare": "husky install"
   },
   "keywords": [],

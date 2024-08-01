@@ -17,7 +17,7 @@ import { upsert } from './repository/server.repository'
 require('dotenv/config');
 
 const CHANNEL_NAME = 'memelander';
-const CHANNEL_IDS: (string | null)[] = [];
+const CHANNEL_IDS: (string | null)[] = ["1266666976554782721", "1266676852395872379", "1266659019834265610"];
 
 const COMMANDS: any[] = [];
 const DEV_GUILD_ID = process.env.DEV_GUILD_ID;
