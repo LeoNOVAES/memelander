@@ -1,10 +1,11 @@
-interface ICommands {
+export interface ICommands {
+    commandName?: string
     body(interaction: any): any;
     execute(interaction: any): any
     interaction(interaction: any): any
 }
 
-interface IDatabase {
+export interface IDatabase {
     store(data: any): any;
     upsert(data: any): any;
     findAll(data: any): any;
@@ -14,7 +15,7 @@ interface IDatabase {
     random(data: any): any;
 }
 
-interface ILogger {
+export interface ILogger {
     log(message: string): void;
 }
 
