@@ -145,7 +145,7 @@ async function interaction({ interaction }) {
     }
 
     const customId = 'MEME_' + sound.name.trim().replace(regex, '_').toUpperCase();
-    
+
     const query = queryBuilder.or(
       { url: sound.url }, 
       { name: sound.name }, 

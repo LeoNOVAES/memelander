@@ -53,7 +53,7 @@ async function interaction({ interaction }) {
         return;
       }
   
-      await interaction.reply(`${interaction.user.username} clicou em ${sound.emoji} ${sound.name}!`);
+      await interaction.reply(`${interaction.user.username} clicou em ${sound?.emoji || '😄'} ${sound.name}!`);
       await playMeme(sound.url, sound?.volume, interaction);
     }
   }
